@@ -1,0 +1,20 @@
+## Interface: 80000
+## Author: ahak
+## Version: @project-version@
+## Title: |cff1784d1LOIH|r Cal
+## Notes: Calendar raid event role assignment tool for Lords of Ironhearts (Arathor EU)
+## SavedVariables: LOIHCalDB
+## RequiredDeps: Blizzard_Calendar
+## OptionalDeps: ElvUI
+
+Localization-en.lua
+Localization-de.lua
+Localization-fr.lua
+Localization-es.lua
+Localization-pt.lua
+Localization-ru.lua
+Localization-ko.lua
+Localization-zh.lua
+
+LOIHCal.lua
+LOIHCalFrame.lua
