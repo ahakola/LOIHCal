@@ -48,7 +48,7 @@ In the old style you pre-select the role for players and then start moving them 
 
 #### Quick Mode
 
-In Quick Mode you don't pre-select the role by clicking the titles of the rolelists, but you select them on the fly by using you keyboard on mouse.
+In Quick Mode you don't pre-select the role by clicking the titles of the rolelists, but you select them on the fly by using you keyboard and mouse.
 
 Modifier | LeftButton | RightButton
 -------- | ---------- | -----------
