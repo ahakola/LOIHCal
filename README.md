@@ -23,15 +23,15 @@ LOIHCal is in game raid event signup role management addon created for guild &lt
 
 This is only short memo on changes, and doesn't include all changes and fixes.
 
-* <ins>:<ins>7.2.4: Mark players without role or decayed autorole with red '@'-signs (`@Playername@`) when viewing event in LOIHCal and autoroledecay is turned on.
-* <ins>70100-1.1: Mark players in current raid group with corner brackets ([Playername]) when viewing event in LOIHCal.
-* <ins>60200-1.2: Almost full refactoring and multiple new features including: Config moved into Interface menu, slash handler, Auto-Roles, Quick Mode, ContextMenu, you can always sign yourself in LOIHCal now, even if you haven't `Signed up` yet...
-* <ins>60200-1.1: Whisper settings in the Config.
-* <ins>60100-1.2: Option to disable Auto-Confirm for players with role.
-* <ins>60000-1.9: `Accepted`, `Signed up` and `Confirmed` are on top of the list, added Mass Invite progress bar and every loot method is onw available as an option for events.
-* <ins>60000-1.8: Try to filter some of the invite spam.
-* <ins>60000-1.3: Config, Attach on top of the Default Blizzard view, default settings for new events, skinning...
-* <ins>60000-1.0: Updated pre-WoD raid difficulties into WoD difficulties.
+* NEW 7.2.4: Mark players without role or decayed autorole with red '@'-signs (`@Playername@`) when viewing event in LOIHCal and autoroledecay is turned on.
+* NEW 70100-1.1: Mark players in current raid group with corner brackets ([Playername]) when viewing event in LOIHCal.
+* NEW 60200-1.2: Almost full refactoring and multiple new features including: Config moved into Interface menu, slash handler, Auto-Roles, Quick Mode, ContextMenu, you can always sign yourself in LOIHCal now, even if you haven't `Signed up` yet...
+* NEW 60200-1.1: Whisper settings in the Config.
+* NEW 60100-1.2: Option to disable Auto-Confirm for players with role.
+* NEW 60000-1.9: `Accepted`, `Signed up` and `Confirmed` are on top of the list, added Mass Invite progress bar and every loot method is onw available as an option for events.
+* NEW 60000-1.8: Try to filter some of the invite spam.
+* NEW 60000-1.3: Config, Attach on top of the Default Blizzard view, default settings for new events, skinning...
+* NEW 60000-1.0: Updated pre-WoD raid difficulties into WoD difficulties.
 
 ### How to use it?
 
@@ -50,8 +50,8 @@ In the old style you pre-select the role for players and then start moving them 
 
 In Quick Mode you don't pre-select the role by clicking the titles of the rolelists, but you select them on the fly by using you keyboard on mouse.
 
-  | LeftButton | RightButton
-- | ---------- | -----------
+Modifier | LeftButton | RightButton
+-------- | ---------- | -----------
 Shift | Tanks | Healers
 None | Melee | Ranged
 Ctrl | Signups | Standby
@@ -91,7 +91,7 @@ Under roles tab you can check and alter the Auto-Roles LOIHCal has recorded.
 
 ### Slash commands
 
-Use `/loihcal` or your own translated slashcommand to list available parameters like `config` to open LOIHCal config or `reset` to reset database and `**reload UI**`.
+Use `/loihcal` or your own translated slashcommand to list available parameters like `config` to open LOIHCal config or `reset` to reset database and **reload UI**.
 
 ### Config
 
@@ -127,7 +127,7 @@ You can find config under `Interface -&gt; Addons -&gt; LOIHCal`
   * To remove skinning you have to press the Reload UI for the changes to take effect.
 
 * Reset DB
-  * If for any reason you want to remove all settigs and saved data you can **Shift+Click** the button to reset everything and `**Reload UI**`
+  * If for any reason you want to remove all settigs and saved data you can **Shift+Click** the button to reset everything and **Reload UI**
 
 ### Now what?
 
