@@ -41,10 +41,10 @@ This describes the usage of the LOIHCals own view on raid events.
 
 In the old style you pre-select the role for players and then start moving them into that rolelist until you change the role to different one.
 
-1 Open raid event in Calendar.
-2 Select the role you want to give to players by clicking the **title** of the rolelist.
-3 Now the title bar should change color and you can start moving players into that role by clicking their name on any list you see (You cannot move `Declined`, `Tentative` or invited players unless it is yourself, use the ContextMenu instead).
-4 Select new role by clicking other **title** or deselect your current selection by clicking the selected **title**.
+1. Open raid event in Calendar.
+2. Select the role you want to give to players by clicking the **title** of the rolelist.
+3. Now the title bar should change color and you can start moving players into that role by clicking their name on any list you see (You cannot move `Declined`, `Tentative` or invited players unless it is yourself, use the ContextMenu instead).
+4. Select new role by clicking other **title** or deselect your current selection by clicking the selected **title**.
 
 #### Quick Mode
 
@@ -56,8 +56,8 @@ Shift | Tanks | Healers
 None | Melee | Ranged
 Ctrl | Signups | Standby
 
-1 Open raid event in Calendar.
-2 Select the role using **Shift**/**None**/**Ctrl** keys while clicking the names with **LeftButton**/**RightButton** according to table above.
+1. Open raid event in Calendar.
+2. Select the role using **Shift**/**None**/**Ctrl** keys while clicking the names with **LeftButton**/**RightButton** according to table above.
 
 #### Event settings
 
