@@ -18,9 +18,9 @@ local db, UIFrame, TabsFrame, EventFrame, Options
 local ERR_INVITE_PLAYER_S = string.gsub(_G.ERR_INVITE_PLAYER_S, "%%s", "(.+)")
 --local ERR_INVITE_PLAYER_S = string.gsub(_G.ERR_CHAT_PLAYER_NOT_FOUND_S, "%%s", "(.+)") -- Debug
 
-ns.difficulties, ns.qualities, ns.role, ns.functions = {}, {}, {}, {}
+ns.difficulties, ns.role, ns.functions = {}, {}, {}, {}
 ns.openEvent, ns.inviteTable = {}, {}
-ns.numSignup, ns.selected, ns.selectedPlayer = 0, false, false
+ns.numSignup, ns.notReplied, ns.selected, ns.selectedPlayer = 0, 0, false, false
 ns.version = GetAddOnMetadata(ADDON_NAME, "Version")
 
 --[[----------------------------------------------------------------------------
@@ -41,24 +41,6 @@ for i = 14, 16 do
 	table.insert(ns.difficulties, {name = GetDifficultyInfo(i), id = i})
 end
 
---[[----------------------------------------------------------------------------
-	0 - Poor	1 - Common		2 - Uncommon	3 - Rare
-	4 - Epic	5 - Legendary	6 - Artifact	7 - Heirloom
-	Gives error if you try to set treshold under 2, so we only take 2-5.
-----------------------------------------------------------------------------]]--
-for i = 2, 5 do
-	table.insert(ns.qualities, {name = _G["ITEM_QUALITY"..i.."_DESC"], id = i})
-end
-
-ns.methods = {
-	{ name = strmatch(LOOT_FREE_FOR_ALL, ": ([%a%s]+)"), key = "freeforall", },
-	{ name = strmatch(LOOT_ROUND_ROBIN, ": ([%a%s]+)"), key = "roundrobin", },
-	{ name = strmatch(LOOT_MASTER_LOOTER, ": ([%a%s]+)"), key = "master", },
-	{ name = strmatch(LOOT_GROUP_LOOT, ": ([%a%s]+)"), key = "group", },
-	{ name = strmatch(LOOT_NEED_BEFORE_GREED, ": ([%a%s]+)"), key = "needbeforegreed", },
-	{ name = strmatch(LOOT_PERSONAL_LOOT, ": ([%a%s]+)"), key = "personalloot", },
-}
-
 ns.DBdefaults = {
 	events = {},
 	roles = {},
@@ -73,8 +55,6 @@ ns.DBdefaults = {
 		autoRoleDecay = true,
 		autoRoleDecayTime = 2, -- Months
 		defaultDifficulty = ns.difficulties[1].id,
-		defaultLootMethod = 6, -- Personal
-		defaultLootTreshold = ns.qualities[1].id,
 		sendWhisper = true,
 		InvWhisper = L.DefaultInvWhisper,
 		quickMode = false,
@@ -289,36 +269,41 @@ ns.colors = {
 			-- Count players in different roles
 			local numTanks, numHealers, numMelee, numRanged, numStandby = #ns.role["Tanks"], #ns.role["Healers"], #ns.role["Melee"], #ns.role["Ranged"], #ns.role["Standby"]
 
-			local space = 1
-			UIFrame.Container.bottom.s:SetText(L.Signups.." "..ns.numSignup..string.rep(" ", space).." "..L.Tanks.." "..numTanks..string.rep(" ", space).." "..L.Healers.." "..numHealers..string.rep(" ", space).." "..L.DPS.." "..numMelee + numRanged.." ("..numMelee.." + "..numRanged..") "..string.rep(" ", space).." "..L.Standbys.." "..numStandby)
+			local signupsString = L.Signups
+			if ns.openEvent.difficulty == 16 and ns.numSignup == 20 then -- Mythic and 20 players
+				signupsString = signupsString .. " " .. GREEN_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
+			elseif ns.openEvent.difficulty == 16 then -- Mythic and not 20 players
+				signupsString = signupsString .. " " .. RED_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
+			elseif ns.numSignup >= 10 and ns.numSignup <= 30 then -- Between 10 and 30 players
+				signupsString = signupsString .. " " .. GREEN_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
+			else -- Not between 10 and 30 players
+				signupsString = signupsString .. " " .. RED_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
+			end
 
-			while UIFrame.Container.bottom.s:GetStringWidth() < 309 do -- Expand the line by maxing out the space between text, and make it one step too long (Max width 318, but we want 5px marginal per side)
+			local space = 1
+			UIFrame.Container.bottom.s:SetText(signupsString..string.rep(" ", space).." "..L.NotReplied.." "..HIGHLIGHT_FONT_COLOR_CODE..ns.notReplied..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE.."\n"..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..")")
+
+			while UIFrame.Container.bottom.s:GetStringWidth() < 309 and space < 11 do -- Expand the line by maxing out the space between text, and make it one step too long (Max width 318, but we want 5px marginal per side)
 				space = space + 1
-				UIFrame.Container.bottom.s:SetText(L.Signups.." "..ns.numSignup..string.rep(" ", space).." "..L.Tanks.." "..numTanks..string.rep(" ", space).." "..L.Healers.." "..numHealers..string.rep(" ", space).." "..L.DPS.." "..numMelee + numRanged.." ("..numMelee.." + "..numRanged..") "..string.rep(" ", space).." "..L.Standbys.." "..numStandby)
+				UIFrame.Container.bottom.s:SetText(signupsString..string.rep(" ", space).." "..L.NotReplied.." "..HIGHLIGHT_FONT_COLOR_CODE..ns.notReplied..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE.."\n"..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..")")
 			end
 
 			if space > 0 then -- Now the line is too long, so reduce space by 1, but don't make smaller than 0
 				space = space - 1
 			end
 
-			if ns.openEvent.difficulty == 16 and ns.numSignup == 20 then -- Mythic and 20 players
-				UIFrame.Container.bottom.s:SetText(L.Signups.." "..GREEN_FONT_COLOR_CODE..ns.numSignup..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..") "..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE)
-			elseif ns.openEvent.difficulty == 16 then -- Mythic and not 20 players
-				UIFrame.Container.bottom.s:SetText(L.Signups.." "..RED_FONT_COLOR_CODE..ns.numSignup..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..") "..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE)
-			elseif ns.numSignup >= 10 and ns.numSignup <= 30 then -- Between 10 and 30 players
-				UIFrame.Container.bottom.s:SetText(L.Signups.." "..GREEN_FONT_COLOR_CODE..ns.numSignup..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..") "..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE)
-			else -- Not between 10 and 30 players
-				UIFrame.Container.bottom.s:SetText(L.Signups.." "..RED_FONT_COLOR_CODE..ns.numSignup..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..") "..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE)
-			end
+			UIFrame.Container.bottom.s:SetText(signupsString..string.rep(" ", space).." "..L.NotReplied.." "..HIGHLIGHT_FONT_COLOR_CODE..ns.notReplied..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE.."\n"..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..")")
 		end
 
 		Debug("_countSignups")
 
 		ns.numSignup = 0
+		ns.notReplied = 0
 		-- Throw them into role slots
 		for k, _ in pairs(ns.openEvent["Players"]) do
 			if ns.openEvent["Players"][k]["role"] == "" or ns.openEvent["Players"][k]["role"] == nil or ns.openEvent["Players"][k]["status"] == 1 then -- No role or Invited
 				ns.openEvent["Players"][k]["role"] = "Signup"
+				ns.notReplied = ns.notReplied + 1
 			end
 			if ns.openEvent["Players"][k]["status"] == 3 or ns.openEvent["Players"][k]["status"] == 5 or ns.openEvent["Players"][k]["status"] == 9 then -- Red or Tentative
 				ns.openEvent["Players"][k]["role"] = "Signup"
@@ -400,11 +385,7 @@ ns.colors = {
 				ns.openEvent.type = eventType
 				ns.openEvent.timetable = { ["hour"] = hour, ["min"] = minute, ["day"] = day, ["month"] = month, ["year"] = year }
 				ns.openEvent.difficulty = db.config.defaultDifficulty -- Default
-				ns.openEvent.method = db.config.defaultLootMethod -- Default
-				ns.openEvent.treshold = db.config.defaultLootTreshold -- Default
 				UIFrame.Container.ED:SetSelectedID(ns.openEvent.difficulty-13) -- List items 1-4, Difficulty items 14-16
-				UIFrame.Container.ET:SetSelectedID(ns.openEvent.treshold-1) -- List items 1-4, Treshold items 2-5
-				UIFrame.Container.EM:SetSelectedID(ns.openEvent.method)
 
 				for i = 1, C_Calendar.GetNumInvites() do -- Insert names into table
 					local inviteData = C_Calendar.EventGetInvite(i)
@@ -437,8 +418,6 @@ ns.colors = {
 				ns.openEvent.timetable = ns.openEvent.timetable or { ["hour"] = hour, ["min"] = minute, ["day"] = day, ["month"] = month, ["year"] = year }
 				UIFrame.title.s:SetFormattedText("%s - %s", ADDON_NAME, ns.openEvent.title)
 				UIFrame.Container.ED:SetSelectedID(ns.openEvent.difficulty-13) --6.0
-				UIFrame.Container.ET:SetSelectedID(ns.openEvent.treshold-1)
-				UIFrame.Container.EM:SetSelectedID(ns.openEvent.method)
 
 				for k, _ in pairs(ns.openEvent["Players"]) do -- Delete removed names (maybe someone ragequit or changed guild)
 					local found = false
@@ -557,7 +536,7 @@ ns.colors = {
 						local index = _getIndex(ns.role[source][value]["name"])
 						C_Calendar.EventSetInviteStatus(index, 7) -- The real stuff
 					else
-						CalendarEventAvailable()
+						C_Calendar.EventAvailable()
 					end
 				elseif ns.role[source][value]["status"] ~= 4 then -- Accept
 					ns.role[source][value]["status"] = 2
@@ -565,9 +544,9 @@ ns.colors = {
 
 					if C_Calendar.EventCanEdit() then
 						local index = _getIndex(ns.role[source][value]["name"])
-						CalendarEventSetInviteStatus(index, 2) -- The real stuff
+						C_Calendar.EventSetInviteStatus(index, 2) -- The real stuff
 					else
-						CalendarEventAvailable()
+						C_Calendar.EventAvailable()
 					end
 				end
 			elseif db.config.autoConfirm and _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() then -- Confirm player, but only if you have the rights
@@ -575,7 +554,7 @@ ns.colors = {
 				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 4
 
 				local index = _getIndex(ns.role[source][value]["name"])
-				CalendarEventSetInviteStatus(index, 4) -- The real stuff
+				C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
 			elseif not db.config.autoConfirm and _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() and (ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= 2 and ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= 4 and ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= 7) then -- Not Confirming, but no accepted status yet, set to Accepted.
 
 				-- GUILD_EVENT -> Signedup
@@ -585,13 +564,13 @@ ns.colors = {
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 7
 
 					local index = _getIndex(ns.role[source][value]["name"])
-					CalendarEventSetInviteStatus(index, 7) -- The real stuff
+					C_Calendar.EventSetInviteStatus(index, 7) -- The real stuff
 				else
 					ns.role[source][value]["status"] = 2
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 2
 
 					local index = _getIndex(ns.role[source][value]["name"])
-					CalendarEventSetInviteStatus(index, 2) -- The real stuff
+					C_Calendar.EventSetInviteStatus(index, 2) -- The real stuff
 				end
 			end
 		elseif target == "Signup" and ns.role[source][value]["name"] == ns.playerName then
@@ -763,8 +742,6 @@ ns.colors = {
 		_elvSkin(SignupScrollBarScrollBar, "scrollbar")
 		_elvSkin(StandbyScrollBarScrollBar, "scrollbar")
 		_elvSkin(UIFrame.Container.ED, "ddm")
-		_elvSkin(UIFrame.Container.ET, "ddm")
-		_elvSkin(UIFrame.Container.EM, "ddm")
 		_elvSkin(UIFrame.Container.MIB, "button")
 		_elvSkin(UIFrame.InvBars.Cancel, "button")
 
@@ -1047,24 +1024,6 @@ ns.colors = {
 		end
 	end
 
-	function ns.functions.ETOnSelect(self, arg1, arg2, checked)
-		Debug(">ETOnSelect ID %i, Val %i, Checked \"%s\"", self:GetID(), self.value, tostring(checked))
-			
-		if not checked then
-			UIFrame.Container.ET:SetSelectedID(self:GetID())
-			ns.openEvent.treshold = self.value or db.config.defaultLootTreshold -- To the DBase or default (2)
-		end
-	end
-
-	function ns.functions.EMOnSelect(self, arg1, arg2, checked)
-		Debug(">EMOnSelect ID %i, Val %i, Checked \"%s\"", self:GetID(), self.value, tostring(checked))
-			
-		if not checked then
-			UIFrame.Container.EM:SetSelectedID(self:GetID())
-			ns.openEvent.method = self.value or db.config.defaultLootMethod -- To the DBase or default (6)
-		end
-	end
-
 	local info = {} -- Create only once
 	function ns.functions.EDInitialize()
 		Debug(">EDInitialize")
@@ -1084,55 +1043,6 @@ ns.colors = {
 				info.checked = id == UIFrame.Container.ED.selected
 			else
 				info.checked = id == ns.openEvent.difficulty
-			end
-
-			UIDropDownMenu_AddButton(info)
-		end
-	end
-
-	function ns.functions.ETInitialize()
-		Debug(">ETInitialize")
-
-		--local info = UIDropDownMenu_CreateInfo() -- Source of possible taints?
-		wipe(info)
-		info.func = ns.functions.ETOnSelect
-		info.justifyH = "CENTER"
-
-		for i = 1, #ns.qualities do
-			local name = ns.qualities[i]["name"]
-			local id = ns.qualities[i]["id"]
-			info.text = name
-			info.value = id
-			info.colorCode = ITEM_QUALITY_COLORS[id].hex
-
-			if not ns.openEvent then
-				info.checked = id == UIFrame.Container.ET.selected
-			else
-				info.checked = id == ns.openEvent.treshold
-			end
-
-			UIDropDownMenu_AddButton(info)
-		end
-	end
-
-	function ns.functions.EMInitialize()
-		Debug(">EMInitialize")
-
-		--local info = UIDropDownMenu_CreateInfo() -- Source of possible taints?
-		wipe(info)
-		info.func = ns.functions.EMOnSelect
-		info.justifyH = "CENTER"
-
-		for i = 1, #ns.methods do
-			local name = ns.methods[i]["name"]
-			local key = i
-			info.text = name
-			info.value = key
-
-			if not ns.openEvent then
-				info.checked = key == UIFrame.Container.EM.selected
-			else
-				info.checked = key == ns.openEvent.method
 			end
 
 			UIDropDownMenu_AddButton(info)
@@ -1701,25 +1611,12 @@ ns.colors = {
 	function EventFrame:GROUP_ROSTER_UPDATE(event)
 		Debug(event, ns.groupSize, tostring(UIFrame:IsShown()))
 
-		local function _setTreshold()
-			--[[	Calling this while the loot method is changing will revert
-			to the original loot method. To account for this I simply set the
-			loot threshold 2 second after calling API_SetLootMethod			]]--
-			SetLootThreshold(ns.openEvent.treshold)
-		end
-
 		if ns.massInviteNeedRaidSetup then
 			if GetNumGroupMembers() > 0 and not IsInRaid() then
 				ConvertToRaid()
 
-				-- Set up raid difficulty and loot settings
+				-- Set up raid difficulty
 				SetRaidDifficultyID(ns.openEvent.difficulty)
-				if ns.methods[ns.openEvent.method].key == "master" then
-					SetLootMethod(ns.methods[ns.openEvent.method].key, "Player")
-				else
-					SetLootMethod(ns.methods[ns.openEvent.method].key)
-				end
-				C_Timer.After(2, _setTreshold)
 				ns.massInviteNeedRaidSetup = false
 			else
 				--self:UnregisterEvent(event)
@@ -1981,7 +1878,7 @@ ns.colors = {
 		Raid:SetPoint("TOP", Automation, "BOTTOM", 0, -28)
 
 		local info = {}
-		local DD, DT, DM
+		local DD
 
 		local function _DDOnSelect(self, arg1, arg2, checked)
 			Debug("+DDOnSelect ID %i, Val %i, Checked \"%s\"", self:GetID(), self.value, tostring(checked))
@@ -2027,96 +1924,7 @@ ns.colors = {
 			return self.selected
 		end
 
-		local function _DTOnSelect(self, arg1, arg2, checked)
-			Debug("+DTOnSelect ID %i, Val %i, Checked \"%s\"", self:GetID(), self.value, tostring(checked))
-				
-			if not checked then
-				DT:SetSelectedID(self:GetID())
-				db.config.defaultLootTreshold = self.value -- Drop (to) the (D)Base
-			end
-		end
-
-		local function _DTInitialize()
-			Debug("+DTInitialize")
-
-			--local info = UIDropDownMenu_CreateInfo() -- Source of possible taints?
-			wipe(info)
-			info.func = _DTOnSelect
-			info.justifyH = "CENTER"
-
-			for i = 1, #ns.qualities do
-				local name = ns.qualities[i]["name"]
-				local id = ns.qualities[i]["id"]
-				info.text = name
-				info.value = id
-				info.colorCode = ITEM_QUALITY_COLORS[id].hex
-				info.checked = id == DT.selected
-
-				UIDropDownMenu_AddButton(info)
-			end
-		end
-
-		DT = CreateFrame("Button", "$parentDT", ScrollChild, "UIDropDownMenuTemplate")
-		DT.selected = db.config.defaultLootTreshold
-		UIDropDownMenu_Initialize(DT, _DTInitialize)
-		UIDropDownMenu_JustifyText(DT, "CENTER")
-		DT:SetPoint("TOPLEFT", DD, "BOTTOMLEFT", 0, -5)
-
-		-- Quick and dirty taint fix
-		function DT:SetSelectedID(id)
-			self.selected = id+1 -- List items 1-4, Treshold items 2-5
-			UIDropDownMenu_SetText(DT, ITEM_QUALITY_COLORS[ns.qualities[id]["id"]].hex..ns.qualities[id]["name"].."|r")
-		end
-
-		function DT:GetSelectedID()
-			return self.selected
-		end
-
-		local function _DMOnSelect(self, arg1, arg2, checked)
-			Debug("+DMOnSelect ID %i, Val %i, Checked \"%s\"", self:GetID(), self.value, tostring(checked))
-				
-			if not checked then
-				DM:SetSelectedID(self:GetID())
-				db.config.defaultLootMethod = self.value -- Drop (to) the (D)Base
-			end
-		end
-
-		local function _DMInitialize()
-			Debug("+DMInitialize")
-
-			--local info = UIDropDownMenu_CreateInfo() -- Source of possible taints?
-			wipe(info)
-			info.func = _DMOnSelect
-			info.justifyH = "CENTER"
-
-			for i = 1, #ns.methods do
-				local name = ns.methods[i]["name"]
-				local key = i
-				info.text = name
-				info.value = key
-				info.checked = key == DM.selected
-
-				UIDropDownMenu_AddButton(info)
-			end
-		end
-
-		DM = CreateFrame("Button", "$parentDM", ScrollChild, "UIDropDownMenuTemplate")
-		DM.selected = db.config.defaultLootMethod
-		UIDropDownMenu_Initialize(DM, _DMInitialize)
-		UIDropDownMenu_JustifyText(DM, "CENTER")
-		DM:SetPoint("TOP", DT, "BOTTOM", 0, -5)
-
-		-- Quick and dirty taint fix
-		function DM:SetSelectedID(id)
-			self.selected = id
-			UIDropDownMenu_SetText(DM, ns.methods[id]["name"])
-		end
-
-		function DM:GetSelectedID()
-			return self.selected
-		end
-
-		Raid:SetHeight(floor(DD:GetHeight() + DT:GetHeight() + DM:GetHeight() + 32 + 0.5))
+		Raid:SetHeight(floor(DD:GetHeight() + 32 + 0.5))
 
 		--  Whisper  -----------------------------------------------------------
 
@@ -2313,8 +2121,6 @@ ns.colors = {
 			--[[	Won't show text on DDM without these until you change the value
 			DDMs ain't initialized until you open the DDM part					]]--
 			DD:SetSelectedID(db.config.defaultDifficulty-13)
-			DT:SetSelectedID(db.config.defaultLootTreshold-1)
-			DM:SetSelectedID(db.config.defaultLootMethod)
 
 			enablewhisper:SetChecked(db.config.sendWhisper)
 			editbox:SetText(db.config.InvWhisper)

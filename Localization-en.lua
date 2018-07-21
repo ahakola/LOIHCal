@@ -21,6 +21,8 @@ L.Ranged = "Ranged"
 L.Signups = "Signups"
 L.Standbys = "Standbys"
 L.DPS = "DPS"
+L.NotReplied = "Not replied"
+L.SignupDesc = "^%sName%s / +%sName%s\nEvent moderator\n%s@%sName%s@%s\nNo role data for auto-roles"
 
 --  Invite bars / Think frame  -------------------------------------------------
 L.TimeEstimate = "Estimated time left: ~%ds"
@@ -30,7 +32,6 @@ L.ServerWait = "Waiting for server-side data..."
 
 --  Event view  ----------------------------------------------------------------
 L.RaidDifficulty = "Raid Difficulty"
-L.LootSettings = "Loot Settings"
 L.MassInvite = "Mass Invite"
 L.MassInviteDesc = "Start Mass Invite"
 

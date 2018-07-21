@@ -128,12 +128,8 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			t:SetTexCoord(0.625, 0.75, 0.5, 0.625)
 		elseif role == "DIFFICULTY" then
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			t:SetTexCoord(0.625, 0.75, 0.375, 0.5)
-		elseif role == "LOOT" then
-			--t:SetTexture("Interface\\GroupFrame\\UI-Group-MasterLooter")
-			--t:SetTexCoord(0, 1, 0, 1)
-			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			t:SetTexCoord(0.125, 0.25, 0.25, 0.375)
+			--t:SetTexCoord(0.625, 0.75, 0.375, 0.5)
+			t:SetTexCoord(7/8, 1, 3/4, 7/8)
 		elseif role == "INVITE" then
 			t:SetTexture("Interface\\Buttons\\UI-GuildButton-MOTD-Up")
 			t:SetTexCoord(0, 1, 0, 1)
@@ -303,9 +299,11 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 		UIFrame.title.s:SetFormattedText("%s - %s", ADDON_NAME, ns.openEvent.title or "Loading...")
 	end)
 
-	UIFrame.Container.bottom = _titleFactory(UIFrame.Container, -UIFrame.Container:GetHeight()+20, " ")
+	UIFrame.Container.bottom = _titleFactory(UIFrame.Container, 0, " ")
 	UIFrame.Container.bottom:SetSize(318, 15)
 	UIFrame.Container.bottom:Disable()
+	UIFrame.Container.bottom:SetPoint("BOTTOM", 0, 5)
+	UIFrame.Container.bottom.s:SetPoint("BOTTOM")
 
 	--  Roles frame  -----------------------------------------------------------
 	UIFrame.Roles = _frameFactory("Frame", ADDON_NAME.."_Roles", UIFrame, 320, 580)
@@ -388,6 +386,13 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.Signup.scrollBar = _scrollBarFactory(UIFrame.Container.Signup, ns.role["Signup"]) -- Faux
 	UIFrame.Container.Signup.rows = _metaFactory(UIFrame.Container.Signup)
 
+	UIFrame.Container.Signup.desc = _titleFactory(UIFrame.Container.Signup, 0, " ")
+	UIFrame.Container.Signup.desc:SetSize(152, 15)
+	UIFrame.Container.Signup.desc:Disable()
+	UIFrame.Container.Signup.desc:SetPoint("TOP", UIFrame.Container.Signup, "BOTTOM", 0, -5)
+	UIFrame.Container.Signup.desc.s:SetPoint("TOP")
+	UIFrame.Container.Signup.desc.s:SetFormattedText(L.SignupDesc, HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE, HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE, RED_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE..HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE..RED_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE)
+
 	--  Standby frame  ---------------------------------------------------------
 	UIFrame.Container.Standby = _frameFactory("Frame", "Standby", UIFrame.Container, 152, 92)
 	UIFrame.Container.Standby:SetPoint("TOPLEFT", UIFrame.Container.Signup, "TOPRIGHT", 6, 0)
@@ -422,48 +427,10 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 		return self.selected
 	end
 
-	UIFrame.Container.ET = _frameFactory("Button", ADDON_NAME.."_ET", UIFrame.Container, false, false, "UIDropDownMenuTemplate")
-	UIDropDownMenu_Initialize(UIFrame.Container.ET, ns.functions.ETInitialize)
-	UIDropDownMenu_SetWidth(UIFrame.Container.ET, 105)
-	UIDropDownMenu_JustifyText(UIFrame.Container.ET, "CENTER")
-	UIFrame.Container.ET:SetPoint("TOP", UIFrame.Container.ED, "BOTTOM", 0, -16)
-
-	UIFrame.Container.ET.title = _titleFactory(UIFrame.Container.ET, 15, L.LootSettings)
-	UIFrame.Container.ET.title:SetSize(120, 15)
-	UIFrame.Container.ET.title:Disable()
-
-	UIFrame.Container.ET.role = _iconFactory(UIFrame.Container.ET.title, "LOOT")
-
-	-- Quick and dirty taint fix
-	function UIFrame.Container.ET:SetSelectedID(id)
-		self.selected = id+1 -- List items 1-4, Treshold items 2-5
-		UIDropDownMenu_SetText(UIFrame.Container.ET, ITEM_QUALITY_COLORS[ns.qualities[id]["id"]].hex..ns.qualities[id]["name"].."|r")
-	end
-
-	function UIFrame.Container.ET:GetSelectedID()
-		return self.selected
-	end
-
-	UIFrame.Container.EM = _frameFactory("Button", ADDON_NAME.."_EM", UIFrame.Container, false, false, "UIDropDownMenuTemplate")
-	UIDropDownMenu_Initialize(UIFrame.Container.EM, ns.functions.EMInitialize)
-	UIDropDownMenu_SetWidth(UIFrame.Container.EM, 105)
-	UIDropDownMenu_JustifyText(UIFrame.Container.EM, "CENTER")
-	UIFrame.Container.EM:SetPoint("TOP", UIFrame.Container.ET, "BOTTOM", 0, 10)
-
-	-- Quick and dirty taint fix
-	function UIFrame.Container.EM:SetSelectedID(id)
-		self.selected = id
-		UIDropDownMenu_SetText(UIFrame.Container.EM, ns.methods[id]["name"])
-	end
-
-	function UIFrame.Container.EM:GetSelectedID()
-		return self.selected
-	end
-
 	--  Mass Invite  -----------------------------------------------------------
 	UIFrame.Container.MIB = _frameFactory("Button", ADDON_NAME.."_MIB", UIFrame.Container, 125, 28, "UIPanelButtonTemplate")
 	UIFrame.Container.MIB:SetScript("OnClick", ns.functions.MIBClick)
-	UIFrame.Container.MIB:SetPoint("TOP", UIFrame.Container.Signup, "BOTTOM", 0, -26)
+	UIFrame.Container.MIB:SetPoint("TOP", UIFrame.Container.ED, "BOTTOM", 0, -16) -- -26?
 	UIFrame.Container.MIB:SetText(L.MassInvite)
 
 	UIFrame.Container.MIB.tooltipText = L.MassInviteDesc
