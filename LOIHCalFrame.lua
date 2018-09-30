@@ -265,10 +265,14 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.close:SetScript("OnClick", function(self) -- Hack for 7.0 click through bug
 		if CalendarViewEventFrame:IsShown() then
 			CalendarViewEventFrame:Hide()
+			PlaySound(854)
 		elseif CalendarCreateEventFrame:IsShown() then
 			CalendarCreateEventFrame:Hide()
+			PlaySound(854)
 		end
 	end)
+	-- Hack for OnClick-scripts not working in 8.0
+	UIFrame.close:SetFrameLevel(UIFrame.title:GetFrameLevel() + 2)
 
 
 	--  Shield frame  ----------------------------------------------------------
@@ -432,6 +436,8 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.MIB:SetScript("OnClick", ns.functions.MIBClick)
 	UIFrame.Container.MIB:SetPoint("TOP", UIFrame.Container.ED, "BOTTOM", 0, -16) -- -26?
 	UIFrame.Container.MIB:SetText(L.MassInvite)
+	-- Hack for OnClick-scripts not working in 8.0
+	UIFrame.Container.MIB:SetFrameLevel(UIFrame.title:GetFrameLevel() + 2)
 
 	UIFrame.Container.MIB.tooltipText = L.MassInviteDesc
 

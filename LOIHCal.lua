@@ -390,25 +390,31 @@ ns.colors = {
 				for i = 1, C_Calendar.GetNumInvites() do -- Insert names into table
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
-					Debug(">>> %s, %d, %s, %d, %s", name, level, classFilename, inviteStatus, modStatus)
+					Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
 
-					if inviteStatus == 2 or inviteStatus == 4 or inviteStatus == 7 then
-						if inviteStatus ~= 4 and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
-							local index = _getIndex(name)
-							C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
-							inviteStatus = 4
+					if name and name ~= "" then
+						if inviteStatus == 2 or inviteStatus == 4 or inviteStatus == 7 then
+							if inviteStatus ~= 4 and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
+								local index = _getIndex(name)
+								C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
+								inviteStatus = 4
+							end
+
+							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus }
+						else
+							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = "", moderator = modStatus }
 						end
-
-						ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus }
 					else
-						ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = "", moderator = modStatus }
+						Debug("No name for", i)
 					end
 				end
 
 				-- Now we have player info, let's see if we can enable the MIB
 				if ns.openEvent and ns.openEvent["Players"] ~= nil and ns.openEvent["Players"] ~= "" and C_Calendar.EventCanEdit() then
+					Debug("MIB Enabled")
 					UIFrame.Container.MIB:Enable()
 				else
+					Debug("MIB Disabled")
 					UIFrame.Container.MIB:Disable()
 				end
 			else -- Old event, update it
@@ -439,7 +445,7 @@ ns.colors = {
 							return
 						end
 
-						Debug("- Removed \"%s\" from event %i-%s", tostring(ns.openEvent["Players"][k]["name"]), textureIndex, creator)
+						Debug("- Removed \"%s\" from event %i-%s", tostring(ns.openEvent["Players"][k]["name"]), tonumber(textureIndex), tostring(creator))
 
 						Print(L.RemovedFromEvent, RAID_CLASS_COLORS[ns.openEvent["Players"][k]["class"]].colorStr or "ffffffff", ns.openEvent["Players"][k]["name"], ns.openEvent.title, ns.openEvent.timetable.day or 0, ns.openEvent.timetable.month or 0, ns.openEvent.timetable.year or 0, ns.openEvent.timetable.hour or 0, ns.openEvent.timetable.min or 0)
 
@@ -450,7 +456,7 @@ ns.colors = {
 				for i = 1, C_Calendar.GetNumInvites() do -- Check for new friends
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
-					Debug(">>> %s, %d, %s, %d, %s", name, level, classFilename, inviteStatus, modStatus)
+					Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
 
 					if name and name ~= "" and not ns.openEvent["Players"][name] then -- Insert new name if found
 						if inviteStatus == 2 or inviteStatus == 4 or inviteStatus == 7 then
@@ -482,15 +488,17 @@ ns.colors = {
 							end
 						end
 					else -- This shouldn't happen
-						Debug("- ??? Found unnamed character \"%s\" from event %i-%s", tostring(name), textureIndex, creator)
+						Debug("- ??? Found unnamed character \"%s\" from event %i-%s", tostring(name), tonumber(textureIndex), tostring(creator))
 					end
 				end
 				-- List is now up to date
 
 				-- Now we have the updated player info, let's see if we can enable the Mass Invite Button
 				if C_Calendar.EventCanEdit() then
+					Debug("MIB Enabled")
 					UIFrame.Container.MIB:Enable()
 				else
+					Debug("MIB Disabled")
 					UIFrame.Container.MIB:Disable()
 				end
 			end
@@ -1067,6 +1075,7 @@ ns.colors = {
 				end
 			end
 
+			Debug("#inviteTable:", #ns.inviteTable)
 			_massInvite() -- Send info to invite function
 		end
 	end
