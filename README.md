@@ -152,5 +152,3 @@ German (deDE) | SpeedsharkX, pas06, Bommel2k9
 Russian (ruRU) | mednik
 Traditional Chinese (zhTW) | BNSSNB
 Korean (koKR) | yuk6196
-
-**Please disable TradeSkillMaster before copy&pasting Lua errors to me, it makes the Lua error -reports almost impossible to read.**
