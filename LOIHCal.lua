@@ -134,7 +134,7 @@ ns.colors = {
 
 	local function _removeOldEvents()
 		if type(db.events) ~= "table" then return end
-		local timeData = C_Calendar.GetDate()
+		local timeData = C_DateAndTime.GetCurrentCalendarTime() -- C_Calendar.GetDate()
 		local month, year = timeData.month, timeData.year
 		if db.events and year and month then -- Got DB and current date info
 			for k, v in pairs(db.events) do
@@ -169,7 +169,7 @@ ns.colors = {
 		if not db.config.autoRoleDecay then return end
 
 		if type(db.roles) ~= "table" then return end
-		local timeData = C_Calendar.GetDate()
+		local timeData = C_DateAndTime.GetCurrentCalendarTime() -- C_Calendar.GetDate()
 		local month, day, year = timeData.month, timeData.monthDay, timeData.year
 		month = month - db.config.autoRoleDecayTime
 		if month <= 0 then
@@ -682,7 +682,8 @@ ns.colors = {
 					if db.config.sendWhisper then
 						SendChatMessage(ns.whisperLine, "WHISPER", nil, ns.inviteTable[1]) -- 1. Whisper
 					end
-					InviteUnit(ns.inviteTable[1]) -- 2. Invite
+					--InviteUnit(ns.inviteTable[1]) -- 2. Invite
+					C_PartyInfo.InviteUnit(ns.inviteTable[1]) -- 2. Invite
 					local lastInvited = table.remove(ns.inviteTable, 1) -- 3. Remove from queue
 
 					invited = invited + 1
@@ -1490,7 +1491,7 @@ ns.colors = {
 		-- This fires after reload ui or on normal login
 		Debug(event)
 
-		local timeData = C_Calendar.GetDate()
+		local timeData = C_DateAndTime.GetCurrentCalendarTime() -- C_Calendar.GetDate()
 		local month, day, year = timeData.month, timeData.monthDay, timeData.year
 		C_Calendar.SetAbsMonth(month, year)
 		C_Calendar.OpenCalendar()
@@ -1622,7 +1623,7 @@ ns.colors = {
 
 		if ns.massInviteNeedRaidSetup then
 			if GetNumGroupMembers() > 0 and not IsInRaid() then
-				ConvertToRaid()
+				C_PartyInfo.ConvertToRaid() -- ConvertToRaid()
 
 				-- Set up raid difficulty
 				SetRaidDifficultyID(ns.openEvent.difficulty)

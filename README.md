@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/ahakola/LOIHCal.svg?branch=master)](https://travis-ci.com/ahakola/LOIHCal)
+
 # LOIHCal
 
 LOIHCal is in game raid event signup role management addon created for guild &lt;Lords of Ironhearts&gt; of Arathor EU, but can be used by anyone. Addon was designed to be easy and fast to use with every button and action being (almost) self-explanatory.
@@ -135,12 +137,12 @@ You can find config under `Interface -&gt; Addons -&gt; LOIHCal`
 * Send me feedback and suggestions
 * If you run into bugs, errors or any other weird situations, you can make a ticket or PM me at Curseforge.com (your Curse account should work there as well)
   * Try to give as much info about the error as possible and if you send ticket, **please check the ticket later in case I have asked you some extra information** about the error.
-  * LOIHCal's Curseforge page: http://wow.curseforge.com/addons/loihcal/
+  * LOIHCal's Curseforge page: https://www.curseforge.com/wow/addons/loihcal
   * LUA error reports and/or screenshots are the hot stuff when fixing bugs
   * You can PM me also at Curse.com, but I don't check my PM:s in Curse.com as often as I do on Curseforge.com
 
 * **If you are using any other language client than English, please consider translating this addon**
-  * Drop your localizations at http://wow.curseforge.com/addons/loihcal/localization/
+  * Drop your localizations at https://www.curseforge.com/wow/addons/loihcal/localization
 
 * If you know LUA, take a look at the source and send me feedback how to make things work and look better!
 
