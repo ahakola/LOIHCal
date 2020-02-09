@@ -567,6 +567,7 @@ ns.colors = {
 
 				-- GUILD_EVENT -> Signedup
 				-- PLAYER -> Accepted
+				-- COMMUNITY_EVENT -> ???
 				if ns.openEvent.type and ns.openEvent.type == "GUILD_EVENT" then
 					ns.role[source][value]["status"] = 7
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 7
@@ -1513,7 +1514,7 @@ ns.colors = {
 	function EventFrame:CALENDAR_OPEN_EVENT(event, eventType)
 		Debug("%s \"%s\"", event, tostring(eventType or "!..."))
 
-		if eventType ~= "PLAYER" and eventType ~= "GUILD_EVENT" then return end
+		if eventType ~= "PLAYER" and eventType ~= "GUILD_EVENT" and eventType ~= "COMMUNITY_EVENT" then return end
 
 		UIFrame:Hide() -- Hack for 7.0 click through bug
 
