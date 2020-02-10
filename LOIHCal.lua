@@ -567,8 +567,8 @@ ns.colors = {
 
 				-- GUILD_EVENT -> Signedup
 				-- PLAYER -> Accepted
-				-- COMMUNITY_EVENT -> ???
-				if ns.openEvent.type and ns.openEvent.type == "GUILD_EVENT" then
+				-- COMMUNITY_EVENT -> Signedup (https://www.curseforge.com/wow/addons/loihcal/issues/7)
+				if ns.openEvent.type and (ns.openEvent.type == "GUILD_EVENT" or ns.openEvent.type == "COMMUNITY_EVENT") then
 					ns.role[source][value]["status"] = 7
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 7
 
@@ -636,10 +636,12 @@ ns.colors = {
 		end
 
 		--EventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-		ns.massInviteNeedRaidSetup = true
+		--ns.massInviteNeedRaidSetup = true
 
 		local timer, interval = 0, 0.25
-		local inRaid, invited, total = 1, 0, #ns.inviteTable + 1 -- You are alway "already in the group" and inviteTable doesn't include you
+		local inRaid = math.max(GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1) -- returns 0 if you aren't in a group but we want to include yourself
+		local invited, total = 0, #ns.inviteTable + 1 -- You are alway "already in the group" and inviteTable doesn't include you
+		local lastInvited = ""
 
 		UIFrame.Container.MIB:Disable() -- Just to be safe
 		UIFrame.InvBars:Show()
@@ -650,8 +652,38 @@ ns.colors = {
 		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", _filterMsg)
 		ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", _filterMsg)
 
+		--[[local i, maxInvites = 1, (total - inRaid)
+		while invited < maxInvites and i <= C_Calendar.GetNumInvites() do
+			local inviteInfo = C_Calendar.EventGetInvite(i)
+			if
+				inviteInfo.name ~= ns.playerName and (not UnitInParty(inviteInfo.name)) and (not UnitInRaid(inviteInfo.name)) and
+				(inviteInfo.inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteInfo.inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or
+				inviteInfo.inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP) -- or inviteInfo.inviteStatus == CALENDAR_INVITESTATUS_TENTATIVE)
+			then
+				if db.config.sendWhisper then
+					SendChatMessage(ns.whisperLine, "WHISPER", nil, inviteInfo.name)
+				end
+				C_PartyInfo.InviteUnit(inviteInfo.name)
+				lastInvited = inviteInfo.name
+				invited = invited + 1
+
+				for k = 1, #ns.inviteTable do
+					if inviteInfo.name == ns.inviteTable[k] then
+						table.remove(ns.inviteTable, k)
+					end
+				end
+
+				UIFrame.InvBars.B.s:SetFormattedText("%d/%d %s", invited, maxInvites, lastInvited)
+			end
+			Print("Invites:", i, invited, maxInvites, inRaid, total)
+			i = i + 1
+		end]]
+
+		local lastInviteCount, lastInRaid = 0, 0
+		local inviteTimer = 0
 		UIFrame:SetScript("OnUpdate", function(self, elapsed)
 			timer = timer + elapsed
+			inviteTimer = inviteTimer + elapsed
 			while timer >= interval do -- Give this enough time to do the changes
 				if #ns.inviteTable == 0 then
 					Debug("- InviteTable empty")
@@ -667,14 +699,22 @@ ns.colors = {
 					break -- To prevent InviteUnit(nil)
 				end
 				
-				for i = 1, GetNumGroupMembers() do
-					local name = GetRaidRosterInfo(i)
-					for k, _ in ipairs(ns.inviteTable) do
-						if name == ns.inviteTable[k] then -- Already in group
-							table.remove(ns.inviteTable, k) -- Not going to invite you again
-							inRaid = inRaid + 1
+				inRaid = math.max(GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1) -- returns 0 if you aren't in a group but we want to include yourself
+				--table.remove(ns.inviteTable, 1) -- Debug
+				--Print("OnUpdate", inviteTimer, #ns.inviteTable, #ns.inviteTable * inviteTimer) -- Debug
+
+				if lastInRaid ~= inRaid then
+					for i = 1, GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) do
+						local name = GetRaidRosterInfo(i)
+						for k = 1, #ns.inviteTable do
+							if name == ns.inviteTable[k] then -- Already in group
+								table.remove(ns.inviteTable, k) -- Not going to invite you again
+								--inRaid = inRaid + 1
+							end
 						end
 					end
+
+					lastInRaid = inRaid
 				end
 
 				if #ns.inviteTable > 0 then -- Still someone in the table
@@ -700,7 +740,12 @@ ns.colors = {
 					UIFrame.InvBars.I:SetWidth(240 * invited/total)
 				end
 
-				UIFrame.InvBars.t:SetFormattedText(L.TimeEstimate, #ns.inviteTable * interval)
+				--UIFrame.InvBars.t:SetFormattedText(L.TimeEstimate, #ns.inviteTable * interval)
+				if lastInviteCount ~= invited then
+					UIFrame.InvBars.t:SetFormattedText(L.TimeEstimate, #ns.inviteTable * inviteTimer)
+					lastInviteCount = invited
+					inviteTimer = 0
+				end
 			end
 		end)
 	end
@@ -1075,6 +1120,24 @@ ns.colors = {
 						table.insert(ns.inviteTable, ns.openEvent["Players"][k]["name"])
 					end
 				end
+			end
+
+			for i = 1, GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) do -- returns 0 if you aren't in a group
+				local name = GetRaidRosterInfo(i)
+				for k = 1, #ns.inviteTable do
+					if name == ns.inviteTable[k] then
+						table.remove(ns.inviteTable, k) -- Remove people who are already in the group from invites list
+					end
+				end
+			end
+
+			if not IsInRaid(LE_PARTY_CATEGORY_HOME) then
+				--if GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) + #ns.inviteTable > MAX_PARTY_MEMBERS + 1 then
+					ns.massInviteNeedRaidSetup = true
+					if GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) > 0 then
+						C_PartyInfo.ConvertToRaid()
+					end
+				--end
 			end
 
 			Debug("#inviteTable:", #ns.inviteTable)
@@ -1623,15 +1686,21 @@ ns.colors = {
 		Debug(event, ns.groupSize, tostring(UIFrame:IsShown()))
 
 		if ns.massInviteNeedRaidSetup then
-			if GetNumGroupMembers() > 0 and not IsInRaid() then
+			--if GetNumGroupMembers() > 0 and not IsInRaid() then
+			if IsInGroup(LE_PARTY_CATEGORY_HOME) and not IsInRaid(LE_PARTY_CATEGORY_HOME) then
 				C_PartyInfo.ConvertToRaid() -- ConvertToRaid()
 
 				-- Set up raid difficulty
-				SetRaidDifficultyID(ns.openEvent.difficulty)
-				ns.massInviteNeedRaidSetup = false
+				--SetRaidDifficultyID(ns.openEvent.difficulty)
+				--ns.massInviteNeedRaidSetup = false
 			else
 				--self:UnregisterEvent(event)
-				ns.massInviteNeedRaidSetup = false
+				--ns.massInviteNeedRaidSetup = false
+			end
+
+			if IsInRaid(LE_PARTY_CATEGORY_HOME) and GetRaidDifficultyID() ~= ns.openEvent.difficulty then
+				-- Set up raid difficulty
+				SetRaidDifficultyID(ns.openEvent.difficulty)
 			end
 		end
 
