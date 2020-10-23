@@ -145,7 +145,7 @@ ns.colors = {
 						if i < month then
 							db.events[k][i] = nil
 						end
-					end	
+					end
 				end
 			end
 		end
@@ -367,7 +367,7 @@ ns.colors = {
 			end
 
 			Debug("- %i %i %i %i%i %i-%s", year, month, day, hour, minute, textureIndex, creator)
-			
+
 			db.events[year] = db.events[year] or {}
 			db.events[year][month] = db.events[year][month] or {}
 			db.events[year][month][day] = db.events[year][month][day] or {}
@@ -604,7 +604,7 @@ ns.colors = {
 	local function _massInvite()
 		local function _filterMsg(self, event, msg, ...)
 			Debug("- _filterMsg, %s, %s", event, msg == ns.whisperLine and "true" or "false")
-			
+
 			if event == "CHAT_MSG_WHISPER_INFORM" and msg == ns.whisperLine then
 				return true
 			elseif event == "CHAT_MSG_WHISPER" and msg == ns.whisperLine then
@@ -625,7 +625,7 @@ ns.colors = {
 		end
 
 		Debug("_massInvite")
-	 
+
 		if #ns.inviteTable == 0 then return end
 
 		ns.whisperLine = ADDON_NAME..": "..string.format(db.config.InvWhisper, ns.openEvent.title)
@@ -698,7 +698,7 @@ ns.colors = {
 
 					break -- To prevent InviteUnit(nil)
 				end
-				
+
 				inRaid = math.max(GetNumGroupMembers(LE_PARTY_CATEGORY_HOME), 1) -- returns 0 if you aren't in a group but we want to include yourself
 				--table.remove(ns.inviteTable, 1) -- Debug
 				--Print("OnUpdate", inviteTimer, #ns.inviteTable, #ns.inviteTable * inviteTimer) -- Debug
@@ -904,7 +904,7 @@ ns.colors = {
 					CalendarContextMenu:SetFrameStrata("FULLSCREEN")
 					CalendarContextMenu:SetScript("OnHide", nil)
 				end)
-				
+
 				--[[	How could I make this tick? CalendarContextMenu is used on
 				different things in Blizzard Calendar and I need to Init it for
 				EventInvites somehow?											]]--
@@ -1051,7 +1051,7 @@ ns.colors = {
 
 				row.t:SetColorTexture(row.cc.r, row.cc.g, row.cc.b, 0.35)
 				row:Show()
-				
+
 				-- Live Version
 				if row.status == 2 or row.status == 4 or row.status == 7 or row.status == 6 or row.name == ns.playerName then -- Green people + Standby + Player
 					--row:Enable()
@@ -1070,7 +1070,7 @@ ns.colors = {
 	--  Dropdown Menus  --------------------------------------------------------
 	function ns.functions.EDOnSelect(self, arg1, arg2, checked)
 		Debug(">EDOnSelect ID %i, Val %i, Checked \"%s\"", self:GetID(), self.value, tostring(checked))
-			
+
 		if not checked then
 			UIFrame.Container.ED:SetSelectedID(self:GetID())
 			ns.openEvent.difficulty = self.value or db.config.defaultDifficulty -- To the DBase or default (3)
@@ -1661,7 +1661,7 @@ ns.colors = {
 
 		if ns.selected then
 			ns.selected.t:SetColorTexture(unpack(ns.colors.deselect))
-			ns.selected = false 
+			ns.selected = false
 		end
 
 		-- Calendar might be busy waiting server for event info, let's wait...
@@ -1777,7 +1777,7 @@ ns.colors = {
 				insets = { left = 5, right = 5, top = 5, bottom = 5 }
 			}
 
-			local frame = CreateFrame("Frame", name, ScrollChild)
+			local frame = CreateFrame("Frame", name, ScrollChild, BackdropTemplateMixin and "BackdropTemplate")
 			frame:SetBackdrop(panelBackdrop)
 			frame:SetBackdropColor(0.06, 0.06, 0.06, 0.4)
 			frame:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
@@ -1962,7 +1962,7 @@ ns.colors = {
 
 		local function _DDOnSelect(self, arg1, arg2, checked)
 			Debug("+DDOnSelect ID %i, Val %i, Checked \"%s\"", self:GetID(), self.value, tostring(checked))
-				
+
 			if not checked then
 				DD:SetSelectedID(self:GetID())
 				db.config.defaultDifficulty = self.value -- Drop (to) the (D)Base

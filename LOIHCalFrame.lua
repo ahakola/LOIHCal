@@ -6,7 +6,7 @@
 local ADDON_NAME, ns = ...
 local L = ns.L
 
-local UIFrame = CreateFrame("Frame", "LOIHCalFrame", UIParent)
+local UIFrame = CreateFrame("Frame", "LOIHCalFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 ns.Frame = UIFrame
 
 UIFrame:SetWidth(320)
@@ -30,7 +30,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	local bg = {
 		bgFile = 'Interface\\DialogFrame\\UI-DialogBox-Background',
 		edgeFile = 'Interface\\ChatFrame\\ChatFrameBackground',
-		tile = true, tileSize = 32, edgeSize = 1, 
+		tile = true, tileSize = 32, edgeSize = 1,
 		insets = { left = 0, right = 0, top = 0, bottom = 0 }
 	}
 
@@ -101,7 +101,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 		else
 			f:SetPoint("RIGHT", parent.s, "LEFT", 0, 1)
 		end
-	
+
 		local t = f:CreateTexture()
 		t:SetParent(f)
 		t:SetAllPoints(f)
@@ -154,7 +154,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 		local sn = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLeft")
 		sn:SetPoint("CENTER")
 		f.fname = sn
-		
+
 		local ss = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLeft")
 		ss:SetPoint("LEFT")
 		f.fstatus = ss
@@ -239,7 +239,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	local function _metaFactory(parent)
 		local t = setmetatable({}, { __index = function(t, i)
 			local row = _slotFactory(i, parent)
-			
+
 			rawset(t, i, row)
 			return row
 		end })
@@ -336,7 +336,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 --	Event view frames
 --------------------------------------------------------------------------------
 	--  Tanks frame  -----------------------------------------------------------
-	UIFrame.Container.Tanks = _frameFactory("Frame", "Tanks", UIFrame.Container, 152, 92)
+	UIFrame.Container.Tanks = _frameFactory("Frame", "Tanks", UIFrame.Container, 152, 92, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.Container.Tanks:SetPoint("TOPLEFT", 5, -45)
 
 	UIFrame.Container.Tanks.title = _titleFactory(UIFrame.Container.Tanks, 15, L.Tanks)
@@ -347,7 +347,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.Tanks.rows = _metaFactory(UIFrame.Container.Tanks)
 
 	--  Healers frame  ---------------------------------------------------------
-	UIFrame.Container.Healers = _frameFactory("Frame", "Healers", UIFrame.Container, 152, 92)
+	UIFrame.Container.Healers = _frameFactory("Frame", "Healers", UIFrame.Container, 152, 92, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.Container.Healers:SetPoint("LEFT", UIFrame.Container.Tanks, "RIGHT", 6, 0)
 
 	UIFrame.Container.Healers.title = _titleFactory(UIFrame.Container.Healers, 15, L.Healers)
@@ -358,7 +358,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.Healers.rows = _metaFactory(UIFrame.Container.Healers)
 
 	--  Melee frame  -----------------------------------------------------------
-	UIFrame.Container.Melee = _frameFactory("Frame", "Melee", UIFrame.Container, 152, 152)
+	UIFrame.Container.Melee = _frameFactory("Frame", "Melee", UIFrame.Container, 152, 152, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.Container.Melee:SetPoint("TOP", UIFrame.Container.Tanks, "BOTTOM", 0, -26)
 
 	UIFrame.Container.Melee.title = _titleFactory(UIFrame.Container.Melee, 15, L.Melee)
@@ -369,7 +369,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.Melee.rows = _metaFactory(UIFrame.Container.Melee)
 
 	--  Ranged frame  ----------------------------------------------------------
-	UIFrame.Container.Ranged = _frameFactory("Frame", "Ranged", UIFrame.Container, 152, 152)
+	UIFrame.Container.Ranged = _frameFactory("Frame", "Ranged", UIFrame.Container, 152, 152, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.Container.Ranged:SetPoint("LEFT", UIFrame.Container.Melee, "RIGHT", 6, 0)
 
 	UIFrame.Container.Ranged.title = _titleFactory(UIFrame.Container.Ranged, 15, L.Ranged)
@@ -380,7 +380,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.Ranged.rows = _metaFactory(UIFrame.Container.Ranged)
 
 	--  Signup frame  ----------------------------------------------------------
-	UIFrame.Container.Signup = _frameFactory("Frame", "Signup", UIFrame.Container, 152, 152)
+	UIFrame.Container.Signup = _frameFactory("Frame", "Signup", UIFrame.Container, 152, 152, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.Container.Signup:SetPoint("TOP", UIFrame.Container.Melee, "BOTTOM", 0, -26)
 
 	UIFrame.Container.Signup.title = _titleFactory(UIFrame.Container.Signup, 15, L.Signups)
@@ -398,7 +398,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.Signup.desc.s:SetFormattedText(L.SignupDesc, HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE, HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE, RED_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE..HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE..RED_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE)
 
 	--  Standby frame  ---------------------------------------------------------
-	UIFrame.Container.Standby = _frameFactory("Frame", "Standby", UIFrame.Container, 152, 92)
+	UIFrame.Container.Standby = _frameFactory("Frame", "Standby", UIFrame.Container, 152, 92, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.Container.Standby:SetPoint("TOPLEFT", UIFrame.Container.Signup, "TOPRIGHT", 6, 0)
 
 	UIFrame.Container.Standby.title = _titleFactory(UIFrame.Container.Standby, 15, L.Standbys)
@@ -451,7 +451,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 --	Roles frames
 --------------------------------------------------------------------------------
 	--  Roles scroller  --------------------------------------------------------
-	UIFrame.Roles.AutoRoles = _frameFactory("Frame", "AutoRoles", UIFrame.Roles, 260, 302)
+	UIFrame.Roles.AutoRoles = _frameFactory("Frame", "AutoRoles", UIFrame.Roles, 260, 302, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.Roles.AutoRoles:SetPoint("TOP", 0, -45)
 
 	UIFrame.Roles.AutoRoles.scrollBar = _scrollBarFactory(UIFrame.Roles.AutoRoles) -- Faux
@@ -460,7 +460,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	--  Player info texts  -----------------------------------------------------
 	UIFrame.Roles.AutoRoles.nameText = UIFrame.Roles.AutoRoles:CreateFontString(nil, "OVERLAY", "SubZoneTextFont")
 	UIFrame.Roles.AutoRoles.nameText:SetPoint("TOPLEFT", UIFrame.Roles.AutoRoles, "BOTTOMLEFT", 0, -28)
-	
+
 	UIFrame.Roles.AutoRoles.roleText = UIFrame.Roles.AutoRoles:CreateFontString(nil, "OVERLAY", "GameFontNormalLargeLeft")
 	UIFrame.Roles.AutoRoles.roleText:SetPoint("TOPLEFT", UIFrame.Roles.AutoRoles.nameText, "BOTTOMLEFT", 0, -14)
 
@@ -508,7 +508,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 --	Invite bars frame bars
 --------------------------------------------------------------------------------
 	--  Bars border frame  -----------------------------------------------------
-	UIFrame.InvBars.B = _frameFactory("Frame", "InvBarsEdge", UIFrame.InvBars, 240, 20)
+	UIFrame.InvBars.B = _frameFactory("Frame", "InvBarsEdge", UIFrame.InvBars, 240, 20, BackdropTemplateMixin and "BackdropTemplate")
 	UIFrame.InvBars.B:SetPoint("CENTER")
 	UIFrame.InvBars.B.s = UIFrame.InvBars.B:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	UIFrame.InvBars.B.s:SetPoint("CENTER")
@@ -548,7 +548,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Think:Hide()
 	UIFrame.InvBars:Hide()
 	UIFrame.Roles:Hide()
-	UIFrame:Hide()	
+	UIFrame:Hide()
 
 	ns.OnLoad(UIFrame)
 
