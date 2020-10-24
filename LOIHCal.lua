@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 	LOIHCal
 
-	2014-2017
+	2014-2020
 	Sanex @ EU-Arathor / ahak @ Curseforge
 
 	http://wow.curseforge.com/addons/loihcal/
@@ -72,6 +72,30 @@ ns.colors = {
 	["disabled"] = {0.25, 0.25, 0.25, 0.25}, -- Color when Disabled, Gray was too light (0.5, 0.5, 0.5)
 	["bordercolor"] = {0.65, 0.65, 0.65, 1}, -- Backdrop border color
 }
+
+--[[
+CalendarStatus
+=	Name
+0	Invited
+1	Available
+2	Declined
+3	Confirmed
+4	Out
+5	Standby
+6	Signedup
+7	NotSignedup
+8	Tentative
+
+CALENDAR_INVITESTATUS_INVITED		= 1;
+CALENDAR_INVITESTATUS_ACCEPTED		= 2;
+CALENDAR_INVITESTATUS_DECLINED		= 3;
+CALENDAR_INVITESTATUS_CONFIRMED		= 4;
+CALENDAR_INVITESTATUS_OUT			= 5;
+CALENDAR_INVITESTATUS_STANDBY		= 6;
+CALENDAR_INVITESTATUS_SIGNEDUP		= 7;
+CALENDAR_INVITESTATUS_NOT_SIGNEDUP	= 8;
+CALENDAR_INVITESTATUS_TENTATIVE		= 9;
+]]
 
 --------------------------------------------------------------------------------
 -- Debug and Print
@@ -301,13 +325,13 @@ ns.colors = {
 		ns.notReplied = 0
 		-- Throw them into role slots
 		for k, _ in pairs(ns.openEvent["Players"]) do
-			if ns.openEvent["Players"][k]["role"] == "" or ns.openEvent["Players"][k]["role"] == nil or ns.openEvent["Players"][k]["status"] == 1 then -- No role or Invited
+			if ns.openEvent["Players"][k]["role"] == "" or ns.openEvent["Players"][k]["role"] == nil or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_INVITED then -- No role or Invited
 				ns.openEvent["Players"][k]["role"] = "Signup"
 				ns.notReplied = ns.notReplied + 1
 			end
-			if ns.openEvent["Players"][k]["status"] == 3 or ns.openEvent["Players"][k]["status"] == 5 or ns.openEvent["Players"][k]["status"] == 9 then -- Red or Tentative
+			if ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_DECLINED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_OUT or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_TENTATIVE then -- Red or Tentative
 				ns.openEvent["Players"][k]["role"] = "Signup"
-			elseif ns.openEvent["Players"][k]["status"] == 6 then -- Standby
+			elseif ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_STANDBY then -- Standby
 				ns.openEvent["Players"][k]["role"] = "Standby"
 			end
 
@@ -330,7 +354,7 @@ ns.colors = {
 			end
 
 			-- Count signups (Accepted, Confirmed and Signed Ups)
-			if ns.openEvent["Players"][k]["status"] == 2 or ns.openEvent["Players"][k]["status"] == 4 or ns.openEvent["Players"][k]["status"] == 7 then
+			if ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_ACCEPTED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_CONFIRMED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_SIGNEDUP then
 				if ns.openEvent["Players"][k]["role"] ~= "Signup" then
 					_updateRole(ns.openEvent["Players"][k]["name"], ns.openEvent["Players"][k]["role"], ns.openEvent["Players"][k]["class"], ns.openEvent.timetable)
 				end
@@ -393,11 +417,11 @@ ns.colors = {
 					Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
 
 					if name and name ~= "" then
-						if inviteStatus == 2 or inviteStatus == 4 or inviteStatus == 7 then
-							if inviteStatus ~= 4 and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
+						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
+							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								local index = _getIndex(name)
-								C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
-								inviteStatus = 4
+								C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+								inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
 							end
 
 							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus }
@@ -459,11 +483,11 @@ ns.colors = {
 					Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
 
 					if name and name ~= "" and not ns.openEvent["Players"][name] then -- Insert new name if found
-						if inviteStatus == 2 or inviteStatus == 4 or inviteStatus == 7 then
-							if inviteStatus ~= 4 and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
+						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
+							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								local index = _getIndex(name)
-								C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
-								inviteStatus = 4
+								C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+								inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
 							end
 
 							ns.openEvent["Players"][name] = {name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus}
@@ -474,12 +498,12 @@ ns.colors = {
 						ns.openEvent["Players"][name]["level"] = level -- Level ups?
 						ns.openEvent["Players"][name]["status"] = inviteStatus -- Did you accept the invitation or were you confirmed since we last saw?
 						ns.openEvent["Players"][name]["moderator"] = modStatus -- Ranked up to MODERATOR of event?
-						if (inviteStatus == 2 or inviteStatus == 4 or inviteStatus == 7) then
-							if inviteStatus ~= 4 and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
-								ns.openEvent["Players"][name]["status"] = 4
+						if (inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP) then
+							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
+								ns.openEvent["Players"][name]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 								local index = _getIndex(name)
-								C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
-								inviteStatus = 4
+								C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+								inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
 							end
 
 							if ns.openEvent["Players"][name]["role"] == "" or ns.openEvent["Players"][name]["role"] == nil or
@@ -513,78 +537,101 @@ ns.colors = {
 		-- Transaction players between role-tables
 		Debug("_transaction %s (%s) - %i - %s (%s)", source, tostring(sparent:GetName()), value, target, tostring(tparent:GetName()))
 
+		--[[
+			enumeration Enum.CalendarStatus
+			Num Values: 9
+			Min Value: 0
+			Max Value: 8
+			Values
+				0 Invited
+				1 Available
+				2 Declined
+				3 Confirmed
+				4 Out
+				5 Standby
+				6 Signedup
+				7 NotSignedup
+				8 Tentative
+		]]
+
 		ns.role[source][value]["role"] = target
 		ns.openEvent["Players"][ns.role[source][value]["name"]]["role"] = target
 		if target == "Standby" then -- Change status to Standby if moved to the group
 			if _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() then -- Put player on Standby, but only if you have the rights
-				ns.role[source][value]["status"] = 6
-				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 6
+				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_STANDBY
+				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_STANDBY
 
 				local index = _getIndex(ns.role[source][value]["name"])
-				C_Calendar.EventSetInviteStatus(index, 6) -- The real stuff
+				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_STANDBY].name] or 5) --CALENDAR_INVITESTATUS_STANDBY) -- The real stuff
 			elseif ns.role[source][value]["name"] == ns.playerName and _getIndex(ns.role[source][value]["name"]) and not C_Calendar.EventCanEdit() then -- Set Tentative instead if you can't put yourself to Standby
-				ns.role[source][value]["status"] = 9
-				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 9
+				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
+				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
 
 				C_Calendar.EventTentative()
 			end
 		elseif target ~= "Signup" then -- Change status to Confirmed if moved to other than Signup group
 			if _getIndex(ns.role[source][value]["name"]) and ns.role[source][value]["name"] == ns.playerName then -- Self
 				if db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
-					ns.role[source][value]["status"] = 4
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 4
+					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 
 					local index = _getIndex(ns.role[source][value]["name"])
-					C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
-				elseif ns.role[source][value]["status"] ~= 4 and ns.openEvent.type and ns.openEvent.type == "GUILD_EVENT" then -- Sign up
-					ns.role[source][value]["status"] = 7
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 7
+					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+				elseif ns.role[source][value]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED and ns.openEvent.type and ns.openEvent.type == "GUILD_EVENT" then -- Sign up
+					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
 
 					if C_Calendar.EventCanEdit() then
 						local index = _getIndex(ns.role[source][value]["name"])
-						C_Calendar.EventSetInviteStatus(index, 7) -- The real stuff
+						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_SIGNEDUP].name] or 6) -- CALENDAR_INVITESTATUS_SIGNEDUP) -- The real stuff
 					else
 						C_Calendar.EventAvailable()
 					end
-				elseif ns.role[source][value]["status"] ~= 4 then -- Accept
-					ns.role[source][value]["status"] = 2
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 2
+				elseif ns.role[source][value]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED then -- Accept
+					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
 
 					if C_Calendar.EventCanEdit() then
 						local index = _getIndex(ns.role[source][value]["name"])
-						C_Calendar.EventSetInviteStatus(index, 2) -- The real stuff
+						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_ACCEPTED].name] or 1) -- CALENDAR_INVITESTATUS_ACCEPTED) -- The real stuff
 					else
 						C_Calendar.EventAvailable()
 					end
 				end
 			elseif db.config.autoConfirm and _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() then -- Confirm player, but only if you have the rights
-				ns.role[source][value]["status"] = 4
-				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 4
+				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
+				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 
 				local index = _getIndex(ns.role[source][value]["name"])
-				C_Calendar.EventSetInviteStatus(index, 4) -- The real stuff
-			elseif not db.config.autoConfirm and _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() and (ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= 2 and ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= 4 and ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= 7) then -- Not Confirming, but no accepted status yet, set to Accepted.
+				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+			elseif
+				not db.config.autoConfirm and _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() and
+				(
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_ACCEPTED and
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED and
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_SIGNEDUP
+				) then -- Not Confirming, but no accepted status yet, set to Accepted.
 
 				-- GUILD_EVENT -> Signedup
 				-- PLAYER -> Accepted
 				-- COMMUNITY_EVENT -> Signedup (https://www.curseforge.com/wow/addons/loihcal/issues/7)
 				if ns.openEvent.type and (ns.openEvent.type == "GUILD_EVENT" or ns.openEvent.type == "COMMUNITY_EVENT") then
-					ns.role[source][value]["status"] = 7
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 7
+					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
 
 					local index = _getIndex(ns.role[source][value]["name"])
-					C_Calendar.EventSetInviteStatus(index, 7) -- The real stuff
+					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_SIGNEDUP].name] or 6) -- CALENDAR_INVITESTATUS_SIGNEDUP) -- The real stuff
 				else
-					ns.role[source][value]["status"] = 2
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 2
+					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
 
 					local index = _getIndex(ns.role[source][value]["name"])
-					C_Calendar.EventSetInviteStatus(index, 2) -- The real stuff
+					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_ACCEPTED].name] or 1) -- CALENDAR_INVITESTATUS_ACCEPTED) -- The real stuff
 				end
 			end
 		elseif target == "Signup" and ns.role[source][value]["name"] == ns.playerName then
-			ns.role[source][value]["status"] = 3
-			ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = 3
+			ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_DECLINED
+			ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_DECLINED
 
 			C_Calendar.EventDecline()
 		end
@@ -851,6 +898,7 @@ ns.colors = {
 		if type(input) == "string" then -- Class
 			return RAID_CLASS_COLORS[input] or RAID_CLASS_COLORS["PRIEST"]
 		else -- Numeric
+			--[[
 			if input == 3 or input == 5 then -- Red
 				return RED_FONT_COLOR_CODE
 			elseif input == 6 or input == 9 then -- Orange
@@ -860,6 +908,9 @@ ns.colors = {
 			else -- (1, 8) Normal text
 				return NORMAL_FONT_COLOR_CODE
 			end
+			]]
+			local hexGen = CALENDAR_INVITESTATUS_INFO[input] and CALENDAR_INVITESTATUS_INFO[input].color or CALENDAR_INVITESTATUS_INFO["UNKNOWN"].color
+			return hexGen:GenerateHexColor()
 		end
 	end
 
@@ -914,13 +965,13 @@ ns.colors = {
 
 				local rolePointer = ns.role[self:GetParent():GetName()][self.value]
 				if rolePointer["name"] == ns.playerName then
-					if rolePointer["status"] ~= 9 then -- Tentative
-						rolePointer["status"] = 9
-						ns.openEvent["Players"][rolePointer["name"]]["status"] = 9
+					if rolePointer["status"] ~= CALENDAR_INVITESTATUS_TENTATIVE then -- Tentative
+						rolePointer["status"] = CALENDAR_INVITESTATUS_TENTATIVE
+						ns.openEvent["Players"][rolePointer["name"]]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
 						C_Calendar.EventTentative()
 					else -- Declined
-						rolePointer["status"] = 3
-						ns.openEvent["Players"][rolePointer["name"]]["status"] = 3
+						rolePointer["status"] = CALENDAR_INVITESTATUS_DECLINED
+						ns.openEvent["Players"][rolePointer["name"]]["status"] = CALENDAR_INVITESTATUS_DECLINED
 						C_Calendar.EventDecline()
 					end
 				end
@@ -972,15 +1023,15 @@ ns.colors = {
 	-- Faux Scroller
 	function ns.functions.updateScrollBar(self, tbl) -- Update Slot Buttons
 		local calStatus = { -- Invite statuses
-			[1] = L.Inv, --CALENDAR_INVITESTATUS_INVITED
-			[2] = L.Acc, --CALENDAR_INVITESTATUS_ACCEPTED
-			[3] = L.Dec, --CALENDAR_INVITESTATUS_DECLINED
-			[4] = L.Con, --CALENDAR_INVITESTATUS_CONFIRMED
-			[5] = L.Out, --CALENDAR_INVITESTATUS_OUT
-			[6] = L.Sta, --CALENDAR_INVITESTATUS_STANDBY
-			[7] = L.Sig, --CALENDAR_INVITESTATUS_SIGNEDUP
-			[8] = L.Not, --CALENDAR_INVITESTATUS_NOT_SIGNEDUP
-			[9] = L.Ten --CALENDAR_INVITESTATUS_TENTATIVE
+			[CALENDAR_INVITESTATUS_INVITED] = L.Inv, --CALENDAR_INVITESTATUS_INVITED (1)
+			[CALENDAR_INVITESTATUS_ACCEPTED] = L.Acc, --CALENDAR_INVITESTATUS_ACCEPTED (2)
+			[CALENDAR_INVITESTATUS_DECLINED] = L.Dec, --CALENDAR_INVITESTATUS_DECLINED (3)
+			[CALENDAR_INVITESTATUS_CONFIRMED] = L.Con, --CALENDAR_INVITESTATUS_CONFIRMED (4)
+			[CALENDAR_INVITESTATUS_OUT] = L.Out, --CALENDAR_INVITESTATUS_OUT (5)
+			[CALENDAR_INVITESTATUS_STANDBY] = L.Sta, --CALENDAR_INVITESTATUS_STANDBY (6)
+			[CALENDAR_INVITESTATUS_SIGNEDUP] = L.Sig, --CALENDAR_INVITESTATUS_SIGNEDUP (7)
+			[CALENDAR_INVITESTATUS_NOT_SIGNEDUP] = L.Not, --CALENDAR_INVITESTATUS_NOT_SIGNEDUP (8)
+			[CALENDAR_INVITESTATUS_TENTATIVE] = L.Ten --CALENDAR_INVITESTATUS_TENTATIVE (9)
 		}
 		local maxValue = #tbl
 		local slots = 10
@@ -1016,17 +1067,19 @@ ns.colors = {
 				row.moderator = tbl[value]["moderator"]
 
 				row.cc = _colorMe(row.class) or {r = 1, g = 1, b = 1, colorStr = "ffffffff"}
-				row.sc = _colorMe(row.status) or "|cffffffff"
+				row.sc = "|c" .. _colorMe(row.status) or "|cffffffff"
 
 
 				row.fstatus:SetText(" "..row.sc..calStatus[row.status].."|r")
 				local modStatus = ""
 				if row.moderator == "CREATOR" then
 					--row.fname:SetText("+|c"..row.cc.colorStr..row.name.."|r    ")
-					modStatus = "+"
+					--modStatus = "+"
+					modStatus = "|TInterface\\GroupFrame\\UI-Group-LeaderIcon:0|t"
 				elseif row.moderator == "MODERATOR" then
 					--row.fname:SetText("^|c"..row.cc.colorStr..row.name.."|r    ")
-					modStatus = "^"
+					--modStatus = "^"
+					modStatus = "|TInterface\\GroupFrame\\UI-Group-AssistantIcon:0|t"
 				else
 					--row.fname:SetText("|c"..row.cc.colorStr..row.name.."|r   ")
 					modStatus = ""
@@ -1053,7 +1106,7 @@ ns.colors = {
 				row:Show()
 
 				-- Live Version
-				if row.status == 2 or row.status == 4 or row.status == 7 or row.status == 6 or row.name == ns.playerName then -- Green people + Standby + Player
+				if row.status == CALENDAR_INVITESTATUS_ACCEPTED or row.status == CALENDAR_INVITESTATUS_CONFIRMED or row.status == CALENDAR_INVITESTATUS_SIGNEDUP or row.status == CALENDAR_INVITESTATUS_STANDBY or row.name == ns.playerName then -- Green people + Standby + Player
 					--row:Enable()
 					row.enabled = true
 				else -- If you really want to sign these people, change their status in calendar <-- Not true anymore, we have ContextMenu
@@ -1115,7 +1168,7 @@ ns.colors = {
 		if C_Calendar.EventCanEdit() then
 			wipe(ns.inviteTable)
 			for k, _ in pairs(ns.openEvent["Players"]) do
-				if (ns.openEvent["Players"][k]["status"] == 4 or ns.openEvent["Players"][k]["status"] == 2 or ns.openEvent["Players"][k]["status"] == 7) and ns.openEvent["Players"][k]["role"] ~= "Signup" then -- Add only signed up people with role assigned to them
+				if (ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_CONFIRMED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_ACCEPTED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_SIGNEDUP) and ns.openEvent["Players"][k]["role"] ~= "Signup" then -- Add only signed up people with role assigned to them
 					if ns.openEvent["Players"][k]["name"] ~= ns.playerName then -- Don't add me, I'm already here
 						table.insert(ns.inviteTable, ns.openEvent["Players"][k]["name"])
 					end
