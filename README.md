@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/ahakola/LOIHCal.svg?branch=master)](https://travis-ci.com/ahakola/LOIHCal)
+![Release](https://github.com/ahakola/LOIHCal/actions/workflows/release.yml/badge.svg)
 
 # LOIHCal
 
