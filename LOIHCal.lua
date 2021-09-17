@@ -1564,11 +1564,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	end
 
 	function EventFrame:PLAYER_LOGIN(event)
-		self:RegisterEvent("CALENDAR_EVENT_ALARM")
+		--self:RegisterEvent("CALENDAR_EVENT_ALARM")
 		self:RegisterEvent("CALENDAR_OPEN_EVENT")
 		self:RegisterEvent("CALENDAR_UPDATE_EVENT")
 		self:RegisterEvent("CALENDAR_UPDATE_INVITE_LIST")
-		self:RegisterEvent("QUEST_LOG_UPDATE")
+		--self:RegisterEvent("QUEST_LOG_UPDATE")
 		self:RegisterEvent("GROUP_ROSTER_UPDATE")
 
 		ns.Elv = IsAddOnLoaded("ElvUI")
@@ -1604,6 +1604,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		db = _cleanDB(db, ns.DBdefaults)
 	end
 
+	--[[
 	function EventFrame:QUEST_LOG_UPDATE(event)
 		-- This fires after reload ui or on normal login
 		Debug(event)
@@ -1612,10 +1613,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		local month, day, year = timeData.month, timeData.monthDay, timeData.year
 		C_Calendar.SetAbsMonth(month, year)
 		C_Calendar.OpenCalendar()
-		--[[	Requests calendar information from the server. Does not open the
-		calendar frame. Triggers CALENDAR_UPDATE_EVENT_LIST when your query has
-		finished processing on the server and new calendar information is
-		available.															]]--
+		-- Requests calendar information from the server. Does not open the
+		-- calendar frame. Triggers CALENDAR_UPDATE_EVENT_LIST when your query
+		-- has finished processing on the server and new calendar information is
+		-- available.
 
 		self:UnregisterEvent(event)
 		self.QUEST_LOG_UPDATE = nil
@@ -1626,6 +1627,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		local title, hour, minute = ...
 		Debug(event, tostring(title), tostring(hour), tostring(minute))
 	end
+	]]
 
 	function EventFrame:CALENDAR_OPEN_EVENT(event, eventType)
 		Debug("%s \"%s\"", event, tostring(eventType or "!..."))
@@ -1672,7 +1674,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				UIFrame.Container:Show()
 				TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			end
-		else
+		elseif CalendarCreateEventFrame:IsShown() then
 			UIFrame:SetFrameStrata(CalendarCreateEventFrame:GetFrameStrata())
 			UIFrame:SetFrameLevel(CalendarCreateEventFrame:GetFrameLevel()+7)
 
@@ -1718,21 +1720,25 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		end
 
 		-- Calendar might be busy waiting server for event info, let's wait...
-		UIFrame.Think:Show()
-		local timer = 0
-		self:SetScript("OnUpdate", function(self, elapsed)
-			timer = timer + elapsed
-			-- Prevent updatePlayers running before getting all the names from server
-			--local _, namesReady = C_Calendar.GetNumInvites()
-			while timer >= 0.25 do
-				if not C_Calendar.IsActionPending() then --and namesReady then
-					self:SetScript("OnUpdate", nil)
-					UIFrame.Think:Hide()
-					_updateEventInfo(eventType)
+		if C_Calendar.IsActionPending() then
+			UIFrame.Think:Show()
+			local timer = 0
+			self:SetScript("OnUpdate", function(self, elapsed)
+				timer = timer + elapsed
+				-- Prevent updatePlayers running before getting all the names from server
+				--local _, namesReady = C_Calendar.GetNumInvites()
+				while timer >= 0.25 do
+					if not C_Calendar.IsActionPending() then --and namesReady then
+						self:SetScript("OnUpdate", nil)
+						UIFrame.Think:Hide()
+						_updateEventInfo(eventType)
+					end
+					timer = timer - 0.25
 				end
-				timer = timer - 0.25
-			end
-		end)
+			end)
+		else
+			_updateEventInfo(eventType)
+		end
 	end
 
 	function EventFrame:GROUP_ROSTER_UPDATE(event)

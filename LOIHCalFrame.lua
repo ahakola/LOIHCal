@@ -300,7 +300,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container:SetPoint("TOPLEFT")
 
 	UIFrame.Container:SetScript("OnShow", function(self) -- Update title
-		UIFrame.title.s:SetFormattedText("%s - %s", ADDON_NAME, ns.openEvent.title or "Loading...")
+		UIFrame.title.s:SetFormattedText("%s - %s", ADDON_NAME, ns.openEvent and ns.openEvent.title or "Loading...")
 	end)
 
 	UIFrame.Container.bottom = _titleFactory(UIFrame.Container, 0, " ")
