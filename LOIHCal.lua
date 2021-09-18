@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 	LOIHCal
 
-	2014-2020
+	2014-2021
 	Sanex @ EU-Arathor / ahak @ Curseforge
 
 	http://wow.curseforge.com/addons/loihcal/
@@ -105,9 +105,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		if text then
 			if text:match("%%[dfqsx%d%.]") then
-				(DEBUG_CHAT_FRAME or ChatFrame3):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. format(text, ...))
+				(DEBUG_CHAT_FRAME or (ChatFrame3:IsShown() and ChatFrame3 or ChatFrame4)):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. format(text, ...))
 			else
-				(DEBUG_CHAT_FRAME or ChatFrame3):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. strjoin(" ", text, tostringall(...)))
+				(DEBUG_CHAT_FRAME or (ChatFrame3:IsShown() and ChatFrame3 or ChatFrame4)):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. strjoin(" ", text, tostringall(...)))
 			end
 		end
 	end
@@ -374,6 +374,12 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		Debug("_updateEventInfo:", tostring(eventType))
 
 		local eventData = C_Calendar.GetEventInfo()
+
+		if not eventData or type(eventData) ~= "table" then
+			Debug(">>>FEEL EMPTY INSIDE!")
+			return
+		end -- For some reason we didn't get the eventData
+
 		local title, creator, textureIndex = eventData.title, eventData.creator, tostring(eventData.textureIndex)
 		local month, day, year, hour, minute = eventData.time.month, eventData.time.monthDay, eventData.time.year, eventData.time.hour, eventData.time.minute
 		local hourminute = string.format("%02d%02d", hour, minute)
@@ -420,8 +426,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
 							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								local index = _getIndex(name)
-								C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
-								inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+								if index then
+									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+									inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+								end
 							end
 
 							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus }
@@ -486,8 +494,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
 							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								local index = _getIndex(name)
-								C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
-								inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+								if index then
+									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+									inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+								end
 							end
 
 							ns.openEvent["Players"][name] = {name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus}
@@ -502,8 +512,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								ns.openEvent["Players"][name]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 								local index = _getIndex(name)
-								C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
-								inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+								if index then
+									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+									inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+								end
 							end
 
 							if ns.openEvent["Players"][name]["role"] == "" or ns.openEvent["Players"][name]["role"] == nil or
@@ -556,33 +568,31 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		ns.role[source][value]["role"] = target
 		ns.openEvent["Players"][ns.role[source][value]["name"]]["role"] = target
+		local index = _getIndex(ns.role[source][value]["name"])
 		if target == "Standby" then -- Change status to Standby if moved to the group
-			if _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() then -- Put player on Standby, but only if you have the rights
+			if index and C_Calendar.EventCanEdit() then -- Put player on Standby, but only if you have the rights
 				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_STANDBY
 				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_STANDBY
 
-				local index = _getIndex(ns.role[source][value]["name"])
 				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_STANDBY].name] or 5) --CALENDAR_INVITESTATUS_STANDBY) -- The real stuff
-			elseif ns.role[source][value]["name"] == ns.playerName and _getIndex(ns.role[source][value]["name"]) and not C_Calendar.EventCanEdit() then -- Set Tentative instead if you can't put yourself to Standby
+			elseif ns.role[source][value]["name"] == ns.playerName and index and not C_Calendar.EventCanEdit() then -- Set Tentative instead if you can't put yourself to Standby
 				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
 				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
 
 				C_Calendar.EventTentative()
 			end
 		elseif target ~= "Signup" then -- Change status to Confirmed if moved to other than Signup group
-			if _getIndex(ns.role[source][value]["name"]) and ns.role[source][value]["name"] == ns.playerName then -- Self
+			if index and ns.role[source][value]["name"] == ns.playerName then -- Self
 				if db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 
-					local index = _getIndex(ns.role[source][value]["name"])
 					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
 				elseif ns.role[source][value]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED and ns.openEvent.type and ns.openEvent.type == "GUILD_EVENT" then -- Sign up
 					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
 
 					if C_Calendar.EventCanEdit() then
-						local index = _getIndex(ns.role[source][value]["name"])
 						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_SIGNEDUP].name] or 6) -- CALENDAR_INVITESTATUS_SIGNEDUP) -- The real stuff
 					else
 						C_Calendar.EventAvailable()
@@ -592,20 +602,18 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
 
 					if C_Calendar.EventCanEdit() then
-						local index = _getIndex(ns.role[source][value]["name"])
 						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_ACCEPTED].name] or 1) -- CALENDAR_INVITESTATUS_ACCEPTED) -- The real stuff
 					else
 						C_Calendar.EventAvailable()
 					end
 				end
-			elseif db.config.autoConfirm and _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() then -- Confirm player, but only if you have the rights
+			elseif db.config.autoConfirm and index and C_Calendar.EventCanEdit() then -- Confirm player, but only if you have the rights
 				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
 
-				local index = _getIndex(ns.role[source][value]["name"])
 				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
 			elseif
-				not db.config.autoConfirm and _getIndex(ns.role[source][value]["name"]) and C_Calendar.EventCanEdit() and
+				not db.config.autoConfirm and index and C_Calendar.EventCanEdit() and
 				(
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_ACCEPTED and
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED and
@@ -619,13 +627,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
 
-					local index = _getIndex(ns.role[source][value]["name"])
 					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_SIGNEDUP].name] or 6) -- CALENDAR_INVITESTATUS_SIGNEDUP) -- The real stuff
 				else
 					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
 					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
 
-					local index = _getIndex(ns.role[source][value]["name"])
 					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_ACCEPTED].name] or 1) -- CALENDAR_INVITESTATUS_ACCEPTED) -- The real stuff
 				end
 			end
@@ -1050,12 +1056,12 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			if value <= maxValue then
 				local row = self.rows[i]
 
-				Debug(">>> %s, %s, %s", tostring(value), _getIndex(tbl[value].name), tbl[value].name)
+				Debug(">>> %s, %s, %s", tostring(value), _getIndex(tbl[value].name) or "false", tbl[value].name)
 				Debug(">>> %s, %s, %s, %s", tostring(tbl[value].level), tostring(tbl[value].status), tostring(tbl[value].class), tostring(tbl[value].moderator))
 
 				-- Draw the player buttons
 				row.value = value
-				row.inviteIndex = _getIndex(tbl[value]["name"]) -- CalendarContextMenu needs this
+				row.inviteIndex = _getIndex(tbl[value]["name"]) or -1 -- CalendarContextMenu needs this
 				row.name = tbl[value]["name"]
 				if row.name:match("^([^%-]+)%-(.*)$") then -- Player is from another realm
 					row.name = select(1, row.name:match("^([^%-]+)%-(.*)$"))..INTERACTIVE_SERVER_LABEL -- Shorten realm name into (#)
@@ -1636,7 +1642,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		UIFrame:Hide() -- Hack for 7.0 click through bug
 
-		if CalendarViewEventFrame:IsShown() then
+		if C_Calendar.IsEventOpen() and CalendarViewEventFrame:IsShown() then
 			UIFrame:SetFrameStrata(CalendarViewEventFrame:GetFrameStrata())
 			UIFrame:SetFrameLevel(CalendarViewEventFrame:GetFrameLevel()+7)
 
@@ -1674,7 +1680,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				UIFrame.Container:Show()
 				TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			end
-		elseif CalendarCreateEventFrame:IsShown() then
+		elseif C_Calendar.IsEventOpen() and CalendarCreateEventFrame:IsShown() then
 			UIFrame:SetFrameStrata(CalendarCreateEventFrame:GetFrameStrata())
 			UIFrame:SetFrameLevel(CalendarCreateEventFrame:GetFrameLevel()+7)
 
@@ -1731,7 +1737,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					if not C_Calendar.IsActionPending() then --and namesReady then
 						self:SetScript("OnUpdate", nil)
 						UIFrame.Think:Hide()
-						_updateEventInfo(eventType)
+						if C_Calendar.IsEventOpen() then -- Make sure we didn't close the event while waiting!
+							_updateEventInfo(eventType)
+						end
 					end
 					timer = timer - 0.25
 				end
@@ -1802,6 +1810,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		["reset"] = function()
 			wipe(db)
 			ReloadUI()
+		end,
+		["debug"] = function()
+			db.config.debug = not db.config.debug
+			Print("Debugging: %s%s%s", db.config.debug and GREEN_FONT_COLOR_CODE or RED_FONT_COLOR_CODE, tostring(db.config.debug), FONT_COLOR_CODE_CLOSE)
 		end,
 	}
 
