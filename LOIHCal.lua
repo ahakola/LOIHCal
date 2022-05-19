@@ -105,9 +105,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		if text then
 			if text:match("%%[dfqsx%d%.]") then
-				(DEBUG_CHAT_FRAME or (ChatFrame3:IsShown() and ChatFrame3 or ChatFrame4)):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. format(text, ...))
+				(DEBUG_CHAT_FRAME or (ChatFrame3:IsShown() and ChatFrame3 or (ChatFrame4:IsShown() and ChatFrame4 or DEFAULT_CHAT_FRAME))):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. format(text, ...))
 			else
-				(DEBUG_CHAT_FRAME or (ChatFrame3:IsShown() and ChatFrame3 or ChatFrame4)):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. strjoin(" ", text, tostringall(...)))
+				(DEBUG_CHAT_FRAME or (ChatFrame3:IsShown() and ChatFrame3 or (ChatFrame4:IsShown() and ChatFrame4 or DEFAULT_CHAT_FRAME))):AddMessage("|cffff9999"..ADDON_NAME..":|r " .. strjoin(" ", text, tostringall(...)))
 			end
 		end
 	end
@@ -1572,6 +1572,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	function EventFrame:PLAYER_LOGIN(event)
 		--self:RegisterEvent("CALENDAR_EVENT_ALARM")
 		self:RegisterEvent("CALENDAR_OPEN_EVENT")
+		self:RegisterEvent("CALENDAR_CLOSE_EVENT")
 		self:RegisterEvent("CALENDAR_UPDATE_EVENT")
 		self:RegisterEvent("CALENDAR_UPDATE_INVITE_LIST")
 		--self:RegisterEvent("QUEST_LOG_UPDATE")
@@ -1644,7 +1645,8 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		if C_Calendar.IsEventOpen() and CalendarViewEventFrame:IsShown() then
 			UIFrame:SetFrameStrata(CalendarViewEventFrame:GetFrameStrata())
-			UIFrame:SetFrameLevel(CalendarViewEventFrame:GetFrameLevel()+7)
+			--UIFrame:SetFrameLevel(CalendarViewEventFrame:GetFrameLevel()+7)
+			UIFrame:Raise()
 
 			ns.functions.renameTabs()
 			UIFrame:Show()
@@ -1682,7 +1684,8 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			end
 		elseif C_Calendar.IsEventOpen() and CalendarCreateEventFrame:IsShown() then
 			UIFrame:SetFrameStrata(CalendarCreateEventFrame:GetFrameStrata())
-			UIFrame:SetFrameLevel(CalendarCreateEventFrame:GetFrameLevel()+7)
+			--UIFrame:SetFrameLevel(CalendarCreateEventFrame:GetFrameLevel()+7)
+			UIFrame:Raise()
 
 			ns.functions.renameTabs()
 			UIFrame:Show()
@@ -1781,6 +1784,20 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		end
 	end
 
+	function EventFrame:CALENDAR_CLOSE_EVENT(event)
+		Debug(event)
+
+		if CalendarViewEventFrame:GetAlpha() < 1 then
+			CalendarViewEventFrame:SetAlpha(1)
+		end
+		if CalendarCreateEventFrame:GetAlpha() < 1 then
+			CalendarCreateEventFrame:SetAlpha(1)
+		end
+
+		UIFrame:Hide()
+		TabsFrame:Hide()
+	end
+
 	function EventFrame:CALENDAR_UPDATE_EVENT(event)
 		Debug(event)
 
@@ -1810,6 +1827,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		["reset"] = function()
 			wipe(db)
 			ReloadUI()
+		end,
+		["hide"] = function()
+			EventFrame:CALENDAR_CLOSE_EVENT("Hiding UI with /slash")
 		end,
 		["debug"] = function()
 			db.config.debug = not db.config.debug
