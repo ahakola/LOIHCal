@@ -46,6 +46,7 @@ ns.DBdefaults = {
 	roles = {},
 	config = {
 		debug = false,
+		nameDebug = false,
 		elvSkin = false,
 		overlay = false,
 		defaultView = true,
@@ -420,7 +421,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				for i = 1, C_Calendar.GetNumInvites() do -- Insert names into table
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
-					Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
+					if db.config.nameDebug then
+						Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
+					end
 
 					if name and name ~= "" then
 						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
@@ -442,6 +445,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				end
 
 				-- Now we have player info, let's see if we can enable the MIB
+				--[[
 				if ns.openEvent and ns.openEvent["Players"] ~= nil and ns.openEvent["Players"] ~= "" and C_Calendar.EventCanEdit() then
 					Debug("MIB Enabled")
 					UIFrame.Container.MIB:Enable()
@@ -449,6 +453,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					Debug("MIB Disabled")
 					UIFrame.Container.MIB:Disable()
 				end
+				]]
 			else -- Old event, update it
 				Debug("- Found DB entry %i-%s, updating", textureIndex, creator)
 
@@ -488,7 +493,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				for i = 1, C_Calendar.GetNumInvites() do -- Check for new friends
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
-					Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
+					if db.config.nameDebug then
+						Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
+					end
 
 					if name and name ~= "" and not ns.openEvent["Players"][name] then -- Insert new name if found
 						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
@@ -530,6 +537,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				-- List is now up to date
 
 				-- Now we have the updated player info, let's see if we can enable the Mass Invite Button
+				--[[
 				if C_Calendar.EventCanEdit() then
 					Debug("MIB Enabled")
 					UIFrame.Container.MIB:Enable()
@@ -537,9 +545,22 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					Debug("MIB Disabled")
 					UIFrame.Container.MIB:Disable()
 				end
+				]]
 			end
 
 			_countSignups()
+			if not db.config.nameDebug then
+				Debug(">>> NumInvites: %d, numSignup: %d, notReplied: %d", C_Calendar.GetNumInvites(), ns.numSignup, ns.notReplied)
+			end
+
+			-- Let's see if we can enable the Mass Invite Button
+			if C_Calendar.EventCanEdit() then
+				Debug("MIB Enabled")
+				UIFrame.Container.MIB:Enable()
+			else
+				Debug("MIB Disabled")
+				UIFrame.Container.MIB:Disable()
+			end
 		else
 			Debug(">>> ??? Bad data")
 		end
@@ -1056,8 +1077,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			if value <= maxValue then
 				local row = self.rows[i]
 
-				Debug(">>> %s, %s, %s", tostring(value), _getIndex(tbl[value].name) or "false", tbl[value].name)
-				Debug(">>> %s, %s, %s, %s", tostring(tbl[value].level), tostring(tbl[value].status), tostring(tbl[value].class), tostring(tbl[value].moderator))
+				if db.config.nameDebug then
+					Debug("<<< %s, %s, %s", tostring(value), _getIndex(tbl[value].name) or "false", tbl[value].name)
+					Debug("<<< %s, %s, %s, %s", tostring(tbl[value].level), tostring(tbl[value].status), tostring(tbl[value].class), tostring(tbl[value].moderator))
+				end
 
 				-- Draw the player buttons
 				row.value = value
@@ -1123,6 +1146,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			else
 				self.rows[i]:Hide()
 			end
+		end
+
+		if not db.config.nameDebug and maxValue > 0 then
+			Debug("<<< %s: %d", self:GetName(), maxValue)
 		end
 	end
 
@@ -1640,10 +1667,15 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		Debug("%s \"%s\"", event, tostring(eventType or "!..."))
 
 		if eventType ~= "PLAYER" and eventType ~= "GUILD_EVENT" and eventType ~= "COMMUNITY_EVENT" then return end
+		if not C_Calendar.IsEventOpen() then
+ 			Debug("- We ended up in a limbo... Trying to recover...")
+			self:CALENDAR_CLOSE_EVENT("Panik! Escaping limbo...")
+		end
 
 		UIFrame:Hide() -- Hack for 7.0 click through bug
 
 		if C_Calendar.IsEventOpen() and CalendarViewEventFrame:IsShown() then
+			Debug("- CalendarViewEventFrame")
 			UIFrame:SetFrameStrata(CalendarViewEventFrame:GetFrameStrata())
 			--UIFrame:SetFrameLevel(CalendarViewEventFrame:GetFrameLevel()+7)
 			UIFrame:Raise()
@@ -1683,6 +1715,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			end
 		elseif C_Calendar.IsEventOpen() and CalendarCreateEventFrame:IsShown() then
+			Debug("- CalendarCreateEventFrame")
 			UIFrame:SetFrameStrata(CalendarCreateEventFrame:GetFrameStrata())
 			--UIFrame:SetFrameLevel(CalendarCreateEventFrame:GetFrameLevel()+7)
 			UIFrame:Raise()
@@ -1730,24 +1763,30 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		-- Calendar might be busy waiting server for event info, let's wait...
 		if C_Calendar.IsActionPending() then
+			Debug("- Action Pending...")
 			UIFrame.Think:Show()
-			local timer = 0
+			local timer, ttimer = 0, 0
 			self:SetScript("OnUpdate", function(self, elapsed)
 				timer = timer + elapsed
+				ttimer = ttimer + elapsed
 				-- Prevent updatePlayers running before getting all the names from server
 				--local _, namesReady = C_Calendar.GetNumInvites()
-				while timer >= 0.25 do
+				while timer >= 1 / 6 do --0.25 do
 					if not C_Calendar.IsActionPending() then --and namesReady then
 						self:SetScript("OnUpdate", nil)
+						Debug("- Pending Action completed in %dms.", ttimer * 1000)
 						UIFrame.Think:Hide()
 						if C_Calendar.IsEventOpen() then -- Make sure we didn't close the event while waiting!
 							_updateEventInfo(eventType)
+						else
+							self:CALENDAR_CLOSE_EVENT("CalendarFrame closed before Pending Action was completed")
 						end
 					end
-					timer = timer - 0.25
+					timer = timer - 1 / 6 --0.25
 				end
 			end)
 		else
+			Debug("- NO Action Pending! Ready to move on.")
 			_updateEventInfo(eventType)
 		end
 	end
@@ -1834,6 +1873,10 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		["debug"] = function()
 			db.config.debug = not db.config.debug
 			Print("Debugging: %s%s%s", db.config.debug and GREEN_FONT_COLOR_CODE or RED_FONT_COLOR_CODE, tostring(db.config.debug), FONT_COLOR_CODE_CLOSE)
+		end,
+		["names"] = function()
+			db.config.nameDebug = not db.config.nameDebug
+			Print("Names: %s%s%s", db.config.nameDebug and GREEN_FONT_COLOR_CODE or RED_FONT_COLOR_CODE, tostring(db.config.nameDebug), FONT_COLOR_CODE_CLOSE)
 		end,
 	}
 
