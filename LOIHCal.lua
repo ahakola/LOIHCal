@@ -381,6 +381,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			return
 		end -- For some reason we didn't get the eventData
 
+		if not eventType then -- eventType is 'nil' if function is called from anywhere other than CALENDAR_OPEN_EVENT
+			Debug(">> BACKUP eventType:", eventType, "->", eventData.calendarType)
+			eventType = eventData.calendarType
+		end
+
 		local title, creator, textureIndex = eventData.title, eventData.creator, tostring(eventData.textureIndex)
 		local month, day, year, hour, minute = eventData.time.month, eventData.time.monthDay, eventData.time.year, eventData.time.hour, eventData.time.minute
 		local hourminute = string.format("%02d%02d", hour, minute)
@@ -1670,6 +1675,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		if not C_Calendar.IsEventOpen() then
  			Debug("- We ended up in a limbo... Trying to recover...")
 			self:CALENDAR_CLOSE_EVENT("Panik! Escaping limbo...")
+			return -- Forgot this on the first try :P
 		end
 
 		UIFrame:Hide() -- Hack for 7.0 click through bug
@@ -1838,17 +1844,19 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	end
 
 	function EventFrame:CALENDAR_UPDATE_EVENT(event)
-		Debug(event)
+		Debug(event, CalendarViewEventFrame:IsShown(), CalendarCreateEventFrame:IsShown())
 
-		if CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown() then
+		--if CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown() then
+		if C_Calendar.IsEventOpen() then
 			_updateEventInfo()
 		end
 	end
 
-	function EventFrame:CALENDAR_UPDATE_INVITE_LIST(event)
-		Debug(event)
+	function EventFrame:CALENDAR_UPDATE_INVITE_LIST(event, hasCompleteList)
+		Debug(event, hasCompleteList, CalendarViewEventFrame:IsShown(), CalendarCreateEventFrame:IsShown())
 
-		if CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown() then
+		--if CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown() then
+		if C_Calendar.IsEventOpen() then
 			_updateEventInfo()
 		end
 	end
