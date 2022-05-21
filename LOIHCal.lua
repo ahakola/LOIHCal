@@ -1782,7 +1782,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 						self:SetScript("OnUpdate", nil)
 						Debug("- Pending Action completed in %dms.", ttimer * 1000)
 						UIFrame.Think:Hide()
-						if C_Calendar.IsEventOpen() then -- Make sure we didn't close the event while waiting!
+						if C_Calendar.IsEventOpen() and CalendarFrame:IsShown() then -- Make sure we didn't close the event while waiting!
 							_updateEventInfo(eventType)
 						else
 							self:CALENDAR_CLOSE_EVENT("CalendarFrame closed before Pending Action was completed")
