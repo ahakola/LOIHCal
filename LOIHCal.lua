@@ -1856,7 +1856,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		Debug(event, hasCompleteList, CalendarViewEventFrame:IsShown(), CalendarCreateEventFrame:IsShown())
 
 		--if CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown() then
-		if C_Calendar.IsEventOpen() then
+		if hasCompleteList and C_Calendar.IsEventOpen() then
 			_updateEventInfo()
 		end
 	end
