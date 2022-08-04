@@ -1853,10 +1853,16 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	end
 
 	function EventFrame:CALENDAR_UPDATE_INVITE_LIST(event, hasCompleteList)
-		Debug(event, hasCompleteList, CalendarViewEventFrame:IsShown(), CalendarCreateEventFrame:IsShown())
+		Debug(event, hasCompleteList, CalendarViewEventFrame:IsShown(), CalendarCreateEventFrame:IsShown(), C_Calendar.IsEventOpen(), isEventVisible)
 
 		--if CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown() then
 		if hasCompleteList and C_Calendar.IsEventOpen() then
+			Debug("- Regular")
+			_updateEventInfo()
+		-- Trying to fix Github issue #4
+		-- isEventVisible == UIFrame.Container:IsShown()
+		elseif isEventVisible and (CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown()) then
+			Debug("- Detour!!!")
 			_updateEventInfo()
 		end
 	end
