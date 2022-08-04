@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 	LOIHCal
 
-	2014-2021
+	2014-2022
 	Sanex @ EU-Arathor / ahak @ Curseforge
 
 	http://wow.curseforge.com/addons/loihcal/
