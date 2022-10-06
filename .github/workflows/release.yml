@@ -13,7 +13,7 @@ jobs:
       CF_API_KEY: ${{ secrets.CF_API_KEY }}
       GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
 
-   steps:
+    steps:
       - name: Clone project
         uses: actions/checkout@v3
         with:
@@ -28,4 +28,3 @@ jobs:
         uses: BigWigsMods/packager@v2
         with:
           args: -g wrath -p 75173
-
