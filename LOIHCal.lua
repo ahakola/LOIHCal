@@ -18,6 +18,8 @@ local db, UIFrame, TabsFrame, EventFrame, Options
 local ERR_INVITE_PLAYER_S = string.gsub(_G.ERR_INVITE_PLAYER_S, "%%s", "(.+)")
 --local ERR_INVITE_PLAYER_S = string.gsub(_G.ERR_CHAT_PLAYER_NOT_FOUND_S, "%%s", "(.+)") -- Debug
 
+local isWrathClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC)
+
 ns.difficulties, ns.role, ns.functions = {}, {}, {}, {}
 ns.openEvent, ns.inviteTable = {}, {}
 ns.numSignup, ns.notReplied, ns.selected, ns.selectedPlayer = 0, 0, false, false
@@ -37,8 +39,17 @@ ns.version = GetAddOnMetadata(ADDON_NAME, "Version")
 	21	nil					22	nil						23	"Mythic" (party)
 	24	"Timewalking"		25	"PvP Scenario"			26	nil
 ----------------------------------------------------------------------------]]--
-for i = 14, 16 do
-	table.insert(ns.difficulties, {name = GetDifficultyInfo(i), id = i})
+local difficultyOffset = 0
+if isWrathClassic then -- WratchClassic (10N, 10HC, 25N and 25HC)
+	for i = 3, 6 do
+		table.insert(ns.difficulties, {name = GetDifficultyInfo(i), id = i})
+	end
+	difficultyOffset = 2 -- List items 1-4, Difficulty items 3-6
+else -- Retail (Normal, Heroic and Mythic)
+	for i = 14, 16 do
+		table.insert(ns.difficulties, {name = GetDifficultyInfo(i), id = i})
+	end
+	difficultyOffset = 13 -- List items 1-3, Difficulty items 14-16
 end
 
 ns.DBdefaults = {
@@ -326,13 +337,13 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		ns.notReplied = 0
 		-- Throw them into role slots
 		for k, _ in pairs(ns.openEvent["Players"]) do
-			if ns.openEvent["Players"][k]["role"] == "" or ns.openEvent["Players"][k]["role"] == nil or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_INVITED then -- No role or Invited
+			if ns.openEvent["Players"][k]["role"] == "" or ns.openEvent["Players"][k]["role"] == nil or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Invited then -- No role or Invited
 				ns.openEvent["Players"][k]["role"] = "Signup"
 				ns.notReplied = ns.notReplied + 1
 			end
-			if ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_DECLINED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_OUT or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_TENTATIVE then -- Red or Tentative
+			if ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Declined or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Out or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Tentative then -- Red or Tentative
 				ns.openEvent["Players"][k]["role"] = "Signup"
-			elseif ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_STANDBY then -- Standby
+			elseif ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Standby then -- Standby
 				ns.openEvent["Players"][k]["role"] = "Standby"
 			end
 
@@ -355,7 +366,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			end
 
 			-- Count signups (Accepted, Confirmed and Signed Ups)
-			if ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_ACCEPTED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_CONFIRMED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_SIGNEDUP then
+			if ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Available or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Confirmed or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Signedup then
 				if ns.openEvent["Players"][k]["role"] ~= "Signup" then
 					_updateRole(ns.openEvent["Players"][k]["name"], ns.openEvent["Players"][k]["role"], ns.openEvent["Players"][k]["class"], ns.openEvent.timetable)
 				end
@@ -421,7 +432,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				ns.openEvent.type = eventType
 				ns.openEvent.timetable = { ["hour"] = hour, ["min"] = minute, ["day"] = day, ["month"] = month, ["year"] = year }
 				ns.openEvent.difficulty = db.config.defaultDifficulty -- Default
-				UIFrame.Container.ED:SetSelectedID(ns.openEvent.difficulty-13) -- List items 1-4, Difficulty items 14-16
+				UIFrame.Container.ED:SetSelectedID(ns.openEvent.difficulty - difficultyOffset)
 
 				for i = 1, C_Calendar.GetNumInvites() do -- Insert names into table
 					local inviteData = C_Calendar.EventGetInvite(i)
@@ -431,12 +442,12 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					end
 
 					if name and name ~= "" then
-						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
-							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
+						if inviteStatus == Enum.CalendarStatus.Available or inviteStatus == Enum.CalendarStatus.Confirmed or inviteStatus == Enum.CalendarStatus.Signedup then
+							if inviteStatus ~= Enum.CalendarStatus.Confirmed and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								local index = _getIndex(name)
 								if index then
-									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
-									inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Confirmed) -- The real stuff
+									inviteStatus = Enum.CalendarStatus.Confirmed
 								end
 							end
 
@@ -465,7 +476,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				ns.openEvent.title = title -- Update title
 				ns.openEvent.timetable = ns.openEvent.timetable or { ["hour"] = hour, ["min"] = minute, ["day"] = day, ["month"] = month, ["year"] = year }
 				UIFrame.title.s:SetFormattedText("%s - %s", ADDON_NAME, ns.openEvent.title)
-				UIFrame.Container.ED:SetSelectedID(ns.openEvent.difficulty-13) --6.0
+				UIFrame.Container.ED:SetSelectedID(ns.openEvent.difficulty - difficultyOffset)
 
 				for k, _ in pairs(ns.openEvent["Players"]) do -- Delete removed names (maybe someone ragequit or changed guild)
 					local found = false
@@ -503,12 +514,12 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					end
 
 					if name and name ~= "" and not ns.openEvent["Players"][name] then -- Insert new name if found
-						if inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP then
-							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
+						if inviteStatus == Enum.CalendarStatus.Available or inviteStatus == Enum.CalendarStatus.Confirmed or inviteStatus == Enum.CalendarStatus.Signedup then
+							if inviteStatus ~= Enum.CalendarStatus.Confirmed and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								local index = _getIndex(name)
 								if index then
-									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
-									inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Confirmed) -- The real stuff
+									inviteStatus = Enum.CalendarStatus.Confirmed
 								end
 							end
 
@@ -520,13 +531,13 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 						ns.openEvent["Players"][name]["level"] = level -- Level ups?
 						ns.openEvent["Players"][name]["status"] = inviteStatus -- Did you accept the invitation or were you confirmed since we last saw?
 						ns.openEvent["Players"][name]["moderator"] = modStatus -- Ranked up to MODERATOR of event?
-						if (inviteStatus == CALENDAR_INVITESTATUS_ACCEPTED or inviteStatus == CALENDAR_INVITESTATUS_CONFIRMED or inviteStatus == CALENDAR_INVITESTATUS_SIGNEDUP) then
-							if inviteStatus ~= CALENDAR_INVITESTATUS_CONFIRMED and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
-								ns.openEvent["Players"][name]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
+						if (inviteStatus == Enum.CalendarStatus.Available or inviteStatus == Enum.CalendarStatus.Confirmed or inviteStatus == Enum.CalendarStatus.Signedup) then
+							if inviteStatus ~= Enum.CalendarStatus.Confirmed and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
+								ns.openEvent["Players"][name]["status"] = Enum.CalendarStatus.Confirmed
 								local index = _getIndex(name)
 								if index then
-									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
-									inviteStatus = CALENDAR_INVITESTATUS_CONFIRMED
+									C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Confirmed) -- The real stuff
+									inviteStatus = Enum.CalendarStatus.Confirmed
 								end
 							end
 
@@ -597,73 +608,73 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		local index = _getIndex(ns.role[source][value]["name"])
 		if target == "Standby" then -- Change status to Standby if moved to the group
 			if index and C_Calendar.EventCanEdit() then -- Put player on Standby, but only if you have the rights
-				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_STANDBY
-				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_STANDBY
+				ns.role[source][value]["status"] = Enum.CalendarStatus.Standby
+				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Standby
 
-				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_STANDBY].name] or 5) --CALENDAR_INVITESTATUS_STANDBY) -- The real stuff
+				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Standby) -- The real stuff
 			elseif ns.role[source][value]["name"] == ns.playerName and index and not C_Calendar.EventCanEdit() then -- Set Tentative instead if you can't put yourself to Standby
-				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
-				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
+				ns.role[source][value]["status"] = Enum.CalendarStatus.Tentative
+				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Tentative
 
 				C_Calendar.EventTentative()
 			end
 		elseif target ~= "Signup" then -- Change status to Confirmed if moved to other than Signup group
 			if index and ns.role[source][value]["name"] == ns.playerName then -- Self
 				if db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
-					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
+					ns.role[source][value]["status"] = Enum.CalendarStatus.Confirmed
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Confirmed
 
-					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
-				elseif ns.role[source][value]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED and ns.openEvent.type and ns.openEvent.type == "GUILD_EVENT" then -- Sign up
-					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
+					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Confirmed) -- The real stuff
+				elseif ns.role[source][value]["status"] ~= Enum.CalendarStatus.Confirmed and ns.openEvent.type and ns.openEvent.type == "GUILD_EVENT" then -- Sign up
+					ns.role[source][value]["status"] = Enum.CalendarStatus.Signedup
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Signedup
 
 					if C_Calendar.EventCanEdit() then
-						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_SIGNEDUP].name] or 6) -- CALENDAR_INVITESTATUS_SIGNEDUP) -- The real stuff
+						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Signedup) -- The real stuff
 					else
 						C_Calendar.EventAvailable()
 					end
-				elseif ns.role[source][value]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED then -- Accept
-					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
+				elseif ns.role[source][value]["status"] ~= Enum.CalendarStatus.Confirmed then -- Accept
+					ns.role[source][value]["status"] = Enum.CalendarStatus.Available
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Available
 
 					if C_Calendar.EventCanEdit() then
-						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_ACCEPTED].name] or 1) -- CALENDAR_INVITESTATUS_ACCEPTED) -- The real stuff
+						C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Available) -- The real stuff
 					else
 						C_Calendar.EventAvailable()
 					end
 				end
 			elseif db.config.autoConfirm and index and C_Calendar.EventCanEdit() then -- Confirm player, but only if you have the rights
-				ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
-				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_CONFIRMED
+				ns.role[source][value]["status"] = Enum.CalendarStatus.Confirmed
+				ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Confirmed
 
-				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_CONFIRMED].name] or 3) --CALENDAR_INVITESTATUS_CONFIRMED) -- The real stuff
+				C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Confirmed) -- The real stuff
 			elseif
 				not db.config.autoConfirm and index and C_Calendar.EventCanEdit() and
 				(
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_ACCEPTED and
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_CONFIRMED and
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= CALENDAR_INVITESTATUS_SIGNEDUP
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= Enum.CalendarStatus.Available and
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= Enum.CalendarStatus.Confirmed and
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] ~= Enum.CalendarStatus.Signedup
 				) then -- Not Confirming, but no accepted status yet, set to Accepted.
 
 				-- GUILD_EVENT -> Signedup
 				-- PLAYER -> Accepted
 				-- COMMUNITY_EVENT -> Signedup (https://www.curseforge.com/wow/addons/loihcal/issues/7)
 				if ns.openEvent.type and (ns.openEvent.type == "GUILD_EVENT" or ns.openEvent.type == "COMMUNITY_EVENT") then
-					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_SIGNEDUP
+					ns.role[source][value]["status"] = Enum.CalendarStatus.Signedup
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Signedup
 
-					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_SIGNEDUP].name] or 6) -- CALENDAR_INVITESTATUS_SIGNEDUP) -- The real stuff
+					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Signedup) -- The real stuff
 				else
-					ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
-					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_ACCEPTED
+					ns.role[source][value]["status"] = Enum.CalendarStatus.Available
+					ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Available
 
-					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus[CALENDAR_INVITESTATUS_INFO[CALENDAR_INVITESTATUS_ACCEPTED].name] or 1) -- CALENDAR_INVITESTATUS_ACCEPTED) -- The real stuff
+					C_Calendar.EventSetInviteStatus(index, Enum.CalendarStatus.Available) -- The real stuff
 				end
 			end
 		elseif target == "Signup" and ns.role[source][value]["name"] == ns.playerName then
-			ns.role[source][value]["status"] = CALENDAR_INVITESTATUS_DECLINED
-			ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = CALENDAR_INVITESTATUS_DECLINED
+			ns.role[source][value]["status"] = Enum.CalendarStatus.Declined
+			ns.openEvent["Players"][ns.role[source][value]["name"]]["status"] = Enum.CalendarStatus.Declined
 
 			C_Calendar.EventDecline()
 		end
@@ -997,13 +1008,13 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 				local rolePointer = ns.role[self:GetParent():GetName()][self.value]
 				if rolePointer["name"] == ns.playerName then
-					if rolePointer["status"] ~= CALENDAR_INVITESTATUS_TENTATIVE then -- Tentative
-						rolePointer["status"] = CALENDAR_INVITESTATUS_TENTATIVE
-						ns.openEvent["Players"][rolePointer["name"]]["status"] = CALENDAR_INVITESTATUS_TENTATIVE
+					if rolePointer["status"] ~= Enum.CalendarStatus.Tentative then -- Tentative
+						rolePointer["status"] = Enum.CalendarStatus.Tentative
+						ns.openEvent["Players"][rolePointer["name"]]["status"] = Enum.CalendarStatus.Tentative
 						C_Calendar.EventTentative()
 					else -- Declined
-						rolePointer["status"] = CALENDAR_INVITESTATUS_DECLINED
-						ns.openEvent["Players"][rolePointer["name"]]["status"] = CALENDAR_INVITESTATUS_DECLINED
+						rolePointer["status"] = Enum.CalendarStatus.Declined
+						ns.openEvent["Players"][rolePointer["name"]]["status"] = Enum.CalendarStatus.Declined
 						C_Calendar.EventDecline()
 					end
 				end
@@ -1055,6 +1066,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	-- Faux Scroller
 	function ns.functions.updateScrollBar(self, tbl) -- Update Slot Buttons
 		local calStatus = { -- Invite statuses
+			--[[
 			[CALENDAR_INVITESTATUS_INVITED] = L.Inv, --CALENDAR_INVITESTATUS_INVITED (1)
 			[CALENDAR_INVITESTATUS_ACCEPTED] = L.Acc, --CALENDAR_INVITESTATUS_ACCEPTED (2)
 			[CALENDAR_INVITESTATUS_DECLINED] = L.Dec, --CALENDAR_INVITESTATUS_DECLINED (3)
@@ -1064,6 +1076,33 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			[CALENDAR_INVITESTATUS_SIGNEDUP] = L.Sig, --CALENDAR_INVITESTATUS_SIGNEDUP (7)
 			[CALENDAR_INVITESTATUS_NOT_SIGNEDUP] = L.Not, --CALENDAR_INVITESTATUS_NOT_SIGNEDUP (8)
 			[CALENDAR_INVITESTATUS_TENTATIVE] = L.Ten --CALENDAR_INVITESTATUS_TENTATIVE (9)
+			]]
+
+			--[[
+				enumeration Enum.CalendarStatus
+				Num Values: 9
+				Min Value: 0
+				Max Value: 8
+				Values
+					0 Invited
+					1 Available
+					2 Declined
+					3 Confirmed
+					4 Out
+					5 Standby
+					6 Signedup
+					7 NotSignedup
+					8 Tentative
+			]]
+			[Enum.CalendarStatus.Invited] = L.Inv,
+			[Enum.CalendarStatus.Available] = L.Acc,
+			[Enum.CalendarStatus.Declined] = L.Dec,
+			[Enum.CalendarStatus.Confirmed] = L.Con,
+			[Enum.CalendarStatus.Out] = L.Out,
+			[Enum.CalendarStatus.Standby] = L.Sta,
+			[Enum.CalendarStatus.Signedup] = L.Sig,
+			[Enum.CalendarStatus.NotSignedup] = L.Not,
+			[Enum.CalendarStatus.Tentative] = L.Ten
 		}
 		local maxValue = #tbl
 		local slots = 10
@@ -1140,7 +1179,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				row:Show()
 
 				-- Live Version
-				if row.status == CALENDAR_INVITESTATUS_ACCEPTED or row.status == CALENDAR_INVITESTATUS_CONFIRMED or row.status == CALENDAR_INVITESTATUS_SIGNEDUP or row.status == CALENDAR_INVITESTATUS_STANDBY or row.name == ns.playerName then -- Green people + Standby + Player
+				if row.status == Enum.CalendarStatus.Available or row.status == Enum.CalendarStatus.Confirmed or row.status == Enum.CalendarStatus.Signedup or row.status == Enum.CalendarStatus.Standby or row.name == ns.playerName then -- Green people + Standby + Player
 					--row:Enable()
 					row.enabled = true
 				else -- If you really want to sign these people, change their status in calendar <-- Not true anymore, we have ContextMenu
@@ -1206,7 +1245,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		if C_Calendar.EventCanEdit() then
 			wipe(ns.inviteTable)
 			for k, _ in pairs(ns.openEvent["Players"]) do
-				if (ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_CONFIRMED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_ACCEPTED or ns.openEvent["Players"][k]["status"] == CALENDAR_INVITESTATUS_SIGNEDUP) and ns.openEvent["Players"][k]["role"] ~= "Signup" then -- Add only signed up people with role assigned to them
+				if (ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Confirmed or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Available or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Signedup) and ns.openEvent["Players"][k]["role"] ~= "Signup" then -- Add only signed up people with role assigned to them
 					if ns.openEvent["Players"][k]["name"] ~= ns.playerName then -- Don't add me, I'm already here
 						table.insert(ns.inviteTable, ns.openEvent["Players"][k]["name"])
 					end
@@ -1485,6 +1524,8 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				end
 				UIFrame.Container:Show()
 				UIFrame.Roles:Hide()
+
+				_updateEventInfo()
 			else
 				if CalendarViewEventFrame:IsShown() then
 					CalendarViewEventFrame:SetAlpha(0)
@@ -1520,6 +1561,8 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			if id == 1 then
 				UIFrame.Container:Show()
 				UIFrame.Roles:Hide()
+
+				_updateEventInfo()
 			else
 				UIFrame.Container:Hide()
 				UIFrame.Roles:Show()
@@ -1853,15 +1896,13 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	end
 
 	function EventFrame:CALENDAR_UPDATE_INVITE_LIST(event, hasCompleteList)
-		Debug(event, hasCompleteList, CalendarViewEventFrame:IsShown(), CalendarCreateEventFrame:IsShown(), C_Calendar.IsEventOpen(), isEventVisible)
+		Debug(event, hasCompleteList, CalendarViewEventFrame:IsShown(), CalendarCreateEventFrame:IsShown(), C_Calendar.IsEventOpen())
 
 		--if CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown() then
 		if hasCompleteList and C_Calendar.IsEventOpen() then
 			Debug("- Regular")
 			_updateEventInfo()
-		-- Trying to fix Github issue #4
-		-- isEventVisible == UIFrame.Container:IsShown()
-		elseif isEventVisible and (CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown()) then
+		elseif UIFrame.Container:IsShown() and (CalendarViewEventFrame:IsShown() or CalendarCreateEventFrame:IsShown()) then -- This fixes Github issue #4
 			Debug("- Detour!!!")
 			_updateEventInfo()
 		end
@@ -2144,7 +2185,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		-- Quick and dirty taint fix
 		function DD:SetSelectedID(id)
-			self.selected = id+13 -- List items 1-4, Difficulty items 14-16
+			self.selected = id + difficultyOffset
 			UIDropDownMenu_SetText(DD, ns.difficulties[id]["name"])
 		end
 
@@ -2348,7 +2389,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 			--[[	Won't show text on DDM without these until you change the value
 			DDMs ain't initialized until you open the DDM part					]]--
-			DD:SetSelectedID(db.config.defaultDifficulty-13)
+			DD:SetSelectedID(db.config.defaultDifficulty - difficultyOffset)
 
 			enablewhisper:SetChecked(db.config.sendWhisper)
 			editbox:SetText(db.config.InvWhisper)

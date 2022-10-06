@@ -6,6 +6,14 @@
 local ADDON_NAME, ns = ...
 local L = ns.L
 
+local isWrathClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC)
+local difficultyOffset = 0
+if isWrathClassic then -- WrathClassic
+	difficultyOffset = 2 -- List items 1-4, Difficulty items 3-6
+else -- Retail
+	difficultyOffset = 13 -- List items 1-3, Difficulty items 14-16
+end
+
 local UIFrame = CreateFrame("Frame", "LOIHCalFrame", UIParent, BackdropTemplateMixin and "BackdropTemplate")
 ns.Frame = UIFrame
 
@@ -122,14 +130,26 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			t:SetTexCoord(0.25, 0.5, 0, 1)
 		elseif role == "SIGNUP" then
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			t:SetTexCoord(0.5, 0.625, 0.125, 0.25)
+			if isWrathClassic then
+				t:SetTexCoord(4/8, 5/8, 1/2, 1)
+			else -- Retail
+				t:SetTexCoord(0.5, 0.625, 0.125, 0.25)
+			end
 		elseif role == "STANDBY" then
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			t:SetTexCoord(0.625, 0.75, 0.5, 0.625)
+			if isWrathClassic then
+				t:SetTexCoord(1/8, 2/8, 1/2, 1)
+			else -- Retail
+				t:SetTexCoord(0.625, 0.75, 0.5, 0.625)
+			end
 		elseif role == "DIFFICULTY" then
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			--t:SetTexCoord(0.625, 0.75, 0.375, 0.5)
-			t:SetTexCoord(7/8, 1, 3/4, 7/8)
+			if isWrathClassic then
+				t:SetTexCoord(6/8, 7/8, 0, 1/2)
+			else -- Retail
+				--t:SetTexCoord(0.625, 0.75, 0.375, 0.5)
+				t:SetTexCoord(7/8, 1, 3/4, 7/8)
+			end
 		elseif role == "INVITE" then
 			t:SetTexture("Interface\\Buttons\\UI-GuildButton-MOTD-Up")
 			t:SetTexCoord(0, 1, 0, 1)
@@ -423,7 +443,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 
 	-- Quick and dirty taint fix
 	function UIFrame.Container.ED:SetSelectedID(id)
-		self.selected = id+13 -- List items 1-4, Difficulty items 14-16
+		self.selected = id + difficultyOffset
 		UIDropDownMenu_SetText(UIFrame.Container.ED, ns.difficulties[id]["name"])
 	end
 
