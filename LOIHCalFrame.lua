@@ -22,7 +22,13 @@ UIFrame:SetHeight(580)
 UIFrame:SetToplevel(true)
 UIFrame:EnableMouse(true)
 
-local TabsFrame = CreateFrame("Frame", "LOIHCalTabsFrame", UIParent)
+local TabsFrame
+if isWrathClassic then
+	TabsFrame = CreateFrame("Frame", "LOIHCalTabsFrame", UIParent)
+else -- 10.0 DF
+	TabsFrame = CreateFrame("Frame", "LOIHCalTabsFrame", UIParent, "TabSystemTemplate")
+	TabsFrame:SetTabSelectedCallback(ns.functions.tabOnClick)
+end
 ns.Tabs = TabsFrame
 
 TabsFrame:SetWidth(320)
@@ -238,21 +244,26 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 
 	--  Tab Factory  -----------------------------------------------------------
 	local function _tabFactory(parent, number, text)
-		local f = CreateFrame("Button", "$parentTab"..number, parent, "CharacterFrameTabButtonTemplate")
-		f:SetID(number)
-		f:SetText(text)
+		if isWrathClassic then
+			local f = CreateFrame("Button", "$parentTab"..number, parent, "CharacterFrameTabButtonTemplate")
+			f:SetID(number)
+			f:SetText(text)
 
-		if number == 1 then
-			f:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 0, 2)
-		elseif number == 2 then
-			f:SetPoint("LEFT", parent.tab1, "RIGHT")
-		elseif number == 3 then
-			f:SetPoint("LEFT", parent.tab2, "RIGHT")
+			if number == 1 then
+				f:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", 0, 2)
+			elseif number == 2 then
+				f:SetPoint("LEFT", parent.tab1, "RIGHT")
+			elseif number == 3 then
+				f:SetPoint("LEFT", parent.tab2, "RIGHT")
+			end
+
+			f:SetScript("OnClick", ns.functions.tabOnClick)
+
+			return f
+		else -- 10.0 DF
+			local id = parent:AddTab(text)
+			return parent:GetTabButton(id)
 		end
-
-		f:SetScript("OnClick", ns.functions.tabOnClick)
-
-		return f
 	end
 
 	--  Meta Factory  ----------------------------------------------------------

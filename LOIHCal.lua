@@ -1480,10 +1480,17 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 	--  Tabs frame  ------------------------------------------------------------
 	function ns.functions.tabOnClick(self, button)
-		Debug(">tabOnClick \"%s\" (%i)", self:GetName(), self:GetID())
+		Debug(">tabOnClick \"%s\" (%i)", isWrathClassic and self:GetName() or "Mixin", isWrathClassic and self:GetID() or tonumber(self))
 
-		local id = self:GetID()
-		PanelTemplates_SetTab(TabsFrame, id)
+		local id
+	
+		if isWrathClassic then
+			id = self:GetID()
+			PanelTemplates_SetTab(TabsFrame, id)
+		else -- 10.0 DF
+			id = self
+			TabsFrame:SetTabVisuallySelected(id)
+		end
 		--PlaySound("igMainMenuOptionCheckBoxOn")
 		PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
 
@@ -1502,13 +1509,21 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					if ns.Elv then
 						TabsFrame:SetPoint("TOP", CalendarViewEventFrame, "BOTTOM")
 					else
-						TabsFrame:SetPoint("TOP", CalendarViewEventFrame, "BOTTOM", 0, 4)
+						if isWrathClassic then
+							TabsFrame:SetPoint("TOP", CalendarViewEventFrame, "BOTTOM", 0, 4)
+						else -- 10.0 DF
+							TabsFrame:SetPoint("TOP", CalendarViewEventFrame, "BOTTOM", 0, 6)
+						end
 					end
 				else
 					if ns.Elv then
 						TabsFrame:SetPoint("TOP", CalendarCreateEventFrame, "BOTTOM")
 					else
-						TabsFrame:SetPoint("TOP", CalendarCreateEventFrame, "BOTTOM", 0, 4)
+						if isWrathClassic then
+							TabsFrame:SetPoint("TOP", CalendarCreateEventFrame, "BOTTOM", 0, 4)
+						else -- 10.0 DF
+							TabsFrame:SetPoint("TOP", CalendarCreateEventFrame, "BOTTOM", 0, 6)
+						end
 					end
 				end
 			elseif id == 2 then
@@ -1584,18 +1599,39 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	-- Rename tabs and Show/Hide 3rd tab
 	function ns.functions.renameTabs()
 		if db.config.overlay then
-			TabsFrame.tab3:Show()
-			TabsFrame.tab1:SetText(L.Default)
-			TabsFrame.tab2:SetText(ADDON_NAME)
-			TabsFrame.tab3:SetText(L.Roles)
+			if isWrathClassic then
+				TabsFrame.tab3:Show()
+				TabsFrame.tab1:SetText(L.Default)
+				TabsFrame.tab2:SetText(ADDON_NAME)
+				TabsFrame.tab3:SetText(L.Roles)
 
-			PanelTemplates_SetNumTabs(TabsFrame, 3)
+				PanelTemplates_SetNumTabs(TabsFrame, 3)
+			else -- 10.0 DF
+				TabsFrame.tab1.tabText = L.Default
+				TabsFrame.tab2.tabText = ADDON_NAME
+				TabsFrame.tab3.tabText = L.Roles
+
+				-- So much bubble gum here, I hope Wrath moves into this same system so I can simplify this whole thing by a metric ton
+				-- Update texts
+				TabsFrame.tab1:SetTabEnabled(true)
+				TabsFrame.tab2:SetTabEnabled(true)
+				TabsFrame:SetTabShown(3, true)
+			end
 		else
-			TabsFrame.tab3:Hide()
-			TabsFrame.tab1:SetText(ADDON_NAME)
-			TabsFrame.tab2:SetText(L.Roles)
+			if isWrathClassic then
+				TabsFrame.tab3:Hide()
+				TabsFrame.tab1:SetText(ADDON_NAME)
+				TabsFrame.tab2:SetText(L.Roles)
 
-			PanelTemplates_SetNumTabs(TabsFrame, 2)
+				PanelTemplates_SetNumTabs(TabsFrame, 2)
+			else -- 10.0 DF
+				TabsFrame.tab1.tabText = ADDON_NAME
+				TabsFrame.tab2.tabText = L.Roles
+
+				TabsFrame.tab1:SetTabEnabled(true)
+				TabsFrame.tab2:SetTabEnabled(true)
+				TabsFrame:SetTabShown(3, false)
+			end
 		end
 	end
 
@@ -1740,13 +1776,21 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				if db.config.defaultView then
 					CalendarViewEventFrame:SetAlpha(0)
 
-					PanelTemplates_SetTab(TabsFrame, 2)
+					if isWrathClassic then
+						PanelTemplates_SetTab(TabsFrame, 2)
+					else -- 10.0 DF
+						TabsFrame:SetTab(2)
+					end
 					UIFrame.Container:Show()
 					TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 				else
 					CalendarViewEventFrame:SetAlpha(1)
 
-					PanelTemplates_SetTab(TabsFrame, 1)
+					if isWrathClassic then
+						PanelTemplates_SetTab(TabsFrame, 1)
+					else -- 10.0 DF
+						TabsFrame:SetTab(1)
+					end
 					UIFrame:Hide()
 					UIFrame.Container:Hide()
 					if ns.Elv then
@@ -1759,7 +1803,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				CalendarViewEventFrame:SetAlpha(1)
 
 				UIFrame:SetPoint("TOPLEFT", CalendarViewEventFrame, "TOPRIGHT", 26, 0)
-				PanelTemplates_SetTab(TabsFrame, 1)
+				if isWrathClassic then
+					PanelTemplates_SetTab(TabsFrame, 1)
+				else -- 10.0 DF
+					TabsFrame:SetTab(1)
+				end
 				UIFrame.Container:Show()
 				TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			end
@@ -1780,13 +1828,21 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				if db.config.defaultView then
 					CalendarCreateEventFrame:SetAlpha(0)
 
-					PanelTemplates_SetTab(TabsFrame, 2)
+					if isWrathClassic then
+						PanelTemplates_SetTab(TabsFrame, 2)
+					else -- 10.0 DF
+						TabsFrame:SetTab(2)
+					end
 					UIFrame.Container:Show()
 					TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 				else
 					CalendarCreateEventFrame:SetAlpha(1)
 
-					PanelTemplates_SetTab(TabsFrame, 1)
+					if isWrathClassic then
+						PanelTemplates_SetTab(TabsFrame, 1)
+					else -- 10.0 DF
+						TabsFrame:SetTab(1)
+					end
 					UIFrame:Hide()
 					UIFrame.Container:Hide()
 					if ns.Elv then
@@ -1799,7 +1855,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				CalendarCreateEventFrame:SetAlpha(1)
 
 				UIFrame:SetPoint("TOPLEFT", CalendarCreateEventFrame, "TOPRIGHT", 26, 0)
-				PanelTemplates_SetTab(TabsFrame, 1)
+				if isWrathClassic then
+					PanelTemplates_SetTab(TabsFrame, 1)
+				else -- 10.0 DF
+					TabsFrame:SetTab(1)
+				end
 				UIFrame.Container:Show()
 				TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			end
@@ -2007,6 +2067,14 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			return checkbox
 		end
 
+		--  10.0 Hacks  --------------------------------------------------------
+		local optionsCanvas
+		if isWrathClassic then
+			optionsCanvas = InterfaceOptionsFramePanelContainer
+		else
+			optionsCanvas = SettingsPanel.Container.SettingsCanvas
+		end
+
 		--  Title  -------------------------------------------------------------
 
 		local Title = Options:CreateFontString("$parentTitle", "ARTWORK", "GameFontNormalLarge")
@@ -2022,9 +2090,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		--  Scroller  ----------------------------------------------------------
 
 		local Scroller = CreateFrame("ScrollFrame", "$parentScoller", Options, "UIPanelScrollFrameTemplate")
-		Scroller:SetWidth(floor(InterfaceOptionsFramePanelContainer:GetWidth()) - 40)
-		Scroller:SetHeight(floor(InterfaceOptionsFramePanelContainer:GetHeight() - 16 - Title:GetHeight() - 8 - SubText:GetHeight() - 15))
-		Scroller:SetPoint("BOTTOM", InterfaceOptionsFramePanelContainer, "BOTTOM", -5, 0)
+		Scroller:SetWidth(floor(optionsCanvas:GetWidth()) - 40)
+		Scroller:SetHeight(floor(optionsCanvas:GetHeight() - 16 - Title:GetHeight() - 8 - SubText:GetHeight() - 15))
+		Scroller:SetPoint("BOTTOM", optionsCanvas, "BOTTOM", -5, 0)
 
 		ScrollChild = CreateFrame("Frame", nil, Scroller)
 		ScrollChild:SetHeight(Scroller:GetHeight())

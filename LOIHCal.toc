@@ -1,4 +1,4 @@
-## Interface: 90205
+## Interface: 100000
 ## Interface-Wrath: 30400
 ## Author: ahak
 ## Version: @project-version@
