@@ -529,7 +529,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				for i = 1, C_Calendar.GetNumInvites() do -- Insert names into table
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
-					local timestamp = time(C_Calendar.EventGetInviteResponseTime(i)) -- Signup timestamp
+					local responseTime = C_Calendar.EventGetInviteResponseTime(i) -- Try to get invite response time, this returns empty instead of expected CalendarTime at least on PTR?
+					if responseTime then
+						responseTime.day = responseTime.monthDay -- Fix missing day-field
+					end
+					local timestamp = time(responseTime) -- Signup timestamp
 					if db.config.nameDebug then
 						Debug(">>> %s, %d, %s, %d, %s, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus), tostring(timestamp))
 					end
@@ -602,7 +606,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				for i = 1, C_Calendar.GetNumInvites() do -- Check for new friends
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
-					local timestamp = time(C_Calendar.EventGetInviteResponseTime(i)) -- Signup timestamp
+					local responseTime = C_Calendar.EventGetInviteResponseTime(i) -- Try to get invite response time, this returns empty instead of expected CalendarTime at least on PTR?
+					if responseTime then
+						responseTime.day = responseTime.monthDay -- Fix missing day-field
+					end
+					local timestamp = time(responseTime) -- Signup timestamp
 					if db.config.nameDebug then
 						Debug(">>> %s, %d, %s, %d, %s, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus), tostring(timestamp))
 					end
