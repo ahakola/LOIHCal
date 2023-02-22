@@ -242,6 +242,15 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		return false
 	end
 
+	local function _eventTimestampSort(a, b)
+		--[[	Sort asceding by signup timestamps. 						]]--
+		if a.timestamp and b.timestamp then
+			return a.timestamp < b.timestamp
+		else -- Failsafe
+			return a.name < b.name
+		end
+	end
+
 	local roleTemp = {}
 	local function _getRole(player)
 		if not db.config.autoRole then return "" end
@@ -306,6 +315,33 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			local numTanks, numHealers, numMelee, numRanged, numStandby = #ns.role["Tanks"], #ns.role["Healers"], #ns.role["Melee"], #ns.role["Ranged"], #ns.role["Standby"]
 
 			local signupsString = L.Signups
+			local enoughSignups, tooMuchSignups = false, false
+			if isWrathClassic then -- Classic
+				local signupLimit = (ns.openEvent.difficulty == 3 or ns.openEvent.difficulty == 4) and 10 or 25 -- 10man or 25man
+				if ns.numSignup >= signupLimit then
+					enoughSignups = true
+					if ns.numSignup > signupLimit then
+						tooMuchSignups = true
+					end
+				end
+			else -- Retail
+				local signupLimit = (ns.openEvent.difficulty == 16) and 20 or 10 -- 20man or 10-30man Flex
+				local signupLimitUpper = (ns.openEvent.difficulty == 16) and 20 or 30 -- 20man or 10-30man Flex
+				if ns.numSignup >= signupLimit then
+					enoughSignups = true
+					if ns.numSignup > signupLimitUpper then
+						tooMuchSignups = true
+					end
+				end
+			end
+			if tooMuchSignups then -- Too many people signed up
+				signupsString = signupsString .. " " .. ORANGE_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
+			elseif enoughSignups then -- Enough sign ups
+				signupsString = signupsString .. " " .. GREEN_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
+			else -- Not enough signups
+				signupsString = signupsString .. " " .. RED_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
+			end
+			--[[
 			if ns.openEvent.difficulty == 16 and ns.numSignup == 20 then -- Mythic and 20 players
 				signupsString = signupsString .. " " .. GREEN_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
 			elseif ns.openEvent.difficulty == 16 then -- Mythic and not 20 players
@@ -315,6 +351,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			else -- Not between 10 and 30 players
 				signupsString = signupsString .. " " .. RED_FONT_COLOR_CODE .. ns.numSignup .. FONT_COLOR_CODE_CLOSE
 			end
+			]]
 
 			local space = 1
 			UIFrame.Container.bottom.s:SetText(signupsString..string.rep(" ", space).." "..L.NotReplied.." "..HIGHLIGHT_FONT_COLOR_CODE..ns.notReplied..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE.."\n"..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..")")
@@ -331,10 +368,52 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			UIFrame.Container.bottom.s:SetText(signupsString..string.rep(" ", space).." "..L.NotReplied.." "..HIGHLIGHT_FONT_COLOR_CODE..ns.notReplied..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Standbys.." "..HIGHLIGHT_FONT_COLOR_CODE..numStandby..FONT_COLOR_CODE_CLOSE.."\n"..L.Tanks.." "..HIGHLIGHT_FONT_COLOR_CODE..numTanks..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.Healers.." "..HIGHLIGHT_FONT_COLOR_CODE..numHealers..FONT_COLOR_CODE_CLOSE..string.rep(" ", space).." "..L.DPS.." "..HIGHLIGHT_FONT_COLOR_CODE..numMelee + numRanged..FONT_COLOR_CODE_CLOSE.." ("..HIGHLIGHT_FONT_COLOR_CODE..numMelee..FONT_COLOR_CODE_CLOSE.." + "..HIGHLIGHT_FONT_COLOR_CODE..numRanged..FONT_COLOR_CODE_CLOSE..")")
 		end
 
+		local function _moveToStandBy(movePlayerTable, roleTblIndex) -- Move to Stand By
+			--[[
+				enumeration Enum.CalendarStatus
+				Num Values: 9
+				Min Value: 0
+				Max Value: 8
+				Values
+					0 Invited
+					1 Available
+					2 Declined
+					3 Confirmed
+					4 Out
+					5 Standby
+					6 Signedup
+					7 NotSignedup
+					8 Tentative
+			]]
+			if (mvPlayerTable["status"] == Enum.CalendarStatus.Available or mvPlayerTable["status"] == Enum.CalendarStatus.Confirmed or mvPlayerTable["status"] == Enum.CalendarStatus.Signedup) then -- Check if we are Signed Up or Confirmed before continueing
+				table.remove(ns.role[movePlayerTable["role"]], roleTblIndex) -- Remove from old Role-table
+				movePlayerTable["role"] = "Standby" -- Change Role in the Player-table
+				table.insert(ns.role["Standby"], movePlayerTable) -- Insert into Stand By Role-table
+
+				if db.config.autoConfirm and C_Calendar.EventCanEdit() then
+					local eventIndex = _getIndex(movePlayerTable["name"])
+					if (eventIndex) then
+						C_Calendar.EventSetInviteStatus(eventIndex, Enum.CalendarStatus.Standby) -- The real stuff
+						movePlayerTable["status"] = Enum.CalendarStatus.Standby
+					end
+				end
+			end
+		end
+
 		Debug("_countSignups")
 
 		ns.numSignup = 0
 		ns.notReplied = 0
+
+		local limitCount = 0
+		local upperLimitCount = 30
+		if isWrathClassic then -- Classic
+			upperLimitCount = (ns.openEvent.difficulty == 3 or ns.openEvent.difficulty == 4) and 10 or 25 -- 10man or 25man
+		else -- Retail
+			upperLimitCount = (ns.openEvent.difficulty == 16) and 20 or 30 -- 20man Fixed or 10-30man Flex
+		end
+		sort(ns.openEvent["Players"], _eventTimestampSort) -- Sort by the time of sign up
+
 		-- Throw them into role slots
 		for k, _ in pairs(ns.openEvent["Players"]) do
 			if ns.openEvent["Players"][k]["role"] == "" or ns.openEvent["Players"][k]["role"] == nil or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Invited then -- No role or Invited
@@ -353,16 +432,29 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					found = false
 					if ns.openEvent["Players"][k]["name"] == ns.role[ns.openEvent["Players"][k]["role"]][i]["name"] then
 						found = true
+
+						limitCount = limitCount + 1 -- Count when we go over the upper limit
+						if limitCount > upperLimitCount then
+							_moveToStandBy(ns.openEvent["Players"][k], i) -- Set people past upper limit to stand by based on sign up time
+						end
+
 						break
 					end
 				end
 			end
 
-			if not found and ns.role[ns.openEvent["Players"][k]["role"]] then
-				table.insert(ns.role[ns.openEvent["Players"][k]["role"]], ns.openEvent["Players"][k])
-			elseif not found then -- Fix case where player has unknown role
-				table.insert(ns.role["Signup"], ns.openEvent["Players"][k])
-				--ns.openEvent["Players"][k]["role"] = "Signup"
+			if not found then
+				if ns.role[ns.openEvent["Players"][k]["role"]] then
+					table.insert(ns.role[ns.openEvent["Players"][k]["role"]], ns.openEvent["Players"][k])
+				else -- Fix case where player has unkown role
+					table.insert(ns.role["Signup"], ns.openEvent["Players"][k])
+					ns.openEvent["Players"][k]["role"] = "Signup"
+				end
+
+				limitCount = limitCount + 1 -- Count when we go over the upper limit
+				if limitCount > upperLimitCount then
+					_moveToStandBy(ns.openEvent["Players"][k], #ns.role[ns.openEvent["Players"][k]["role"]]) -- Set people past upper limit to stand by based on sign up time
+				end
 			end
 
 			-- Count signups (Accepted, Confirmed and Signed Ups)
@@ -437,8 +529,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				for i = 1, C_Calendar.GetNumInvites() do -- Insert names into table
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
+					local timestamp = time(C_Calendar.EventGetInviteResponseTime(i)) -- Signup timestamp
 					if db.config.nameDebug then
-						Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
+						Debug(">>> %s, %d, %s, %d, %s, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus), tostring(timestamp))
 					end
 
 					if name and name ~= "" then
@@ -451,9 +544,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 								end
 							end
 
-							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus }
+							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus, timestamp = timestamp }
 						else
-							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = "", moderator = modStatus }
+							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = "", moderator = modStatus, timestamp = timestamp }
 						end
 					else
 						Debug("No name for", i)
@@ -509,8 +602,9 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				for i = 1, C_Calendar.GetNumInvites() do -- Check for new friends
 					local inviteData = C_Calendar.EventGetInvite(i)
 					local name, level, classFilename, inviteStatus, modStatus = inviteData.name, inviteData.level, inviteData.classFilename, inviteData.inviteStatus, inviteData.modStatus
+					local timestamp = time(C_Calendar.EventGetInviteResponseTime(i)) -- Signup timestamp
 					if db.config.nameDebug then
-						Debug(">>> %s, %d, %s, %d, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus))
+						Debug(">>> %s, %d, %s, %d, %s, %s", tostring(name), tonumber(level), tostring(classFilename), tonumber(inviteStatus), tostring(modStatus), tostring(timestamp))
 					end
 
 					if name and name ~= "" and not ns.openEvent["Players"][name] then -- Insert new name if found
@@ -523,14 +617,15 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 								end
 							end
 
-							ns.openEvent["Players"][name] = {name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus}
+							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = _getRole(name), moderator = modStatus, timestamp = timestamp }
 						else
-							ns.openEvent["Players"][name] = {name = name, class = classFilename, level = level, status = inviteStatus, role = "", moderator = modStatus}
+							ns.openEvent["Players"][name] = { name = name, class = classFilename, level = level, status = inviteStatus, role = "", moderator = modStatus, timestamp = timestamp }
 						end
 					elseif name and name ~= "" and ns.openEvent["Players"][name] then -- Found old friend instead, let's update his/her level, inviteStatus and modStatus
 						ns.openEvent["Players"][name]["level"] = level -- Level ups?
 						ns.openEvent["Players"][name]["status"] = inviteStatus -- Did you accept the invitation or were you confirmed since we last saw?
 						ns.openEvent["Players"][name]["moderator"] = modStatus -- Ranked up to MODERATOR of event?
+						ns.openEvent["Players"][name]["timestamp"] = timestamp -- Incase timestamp has changed
 						if (inviteStatus == Enum.CalendarStatus.Available or inviteStatus == Enum.CalendarStatus.Confirmed or inviteStatus == Enum.CalendarStatus.Signedup) then
 							if inviteStatus ~= Enum.CalendarStatus.Confirmed and db.config.autoConfirm and C_Calendar.EventCanEdit() then -- Confirm
 								ns.openEvent["Players"][name]["status"] = Enum.CalendarStatus.Confirmed
@@ -928,8 +1023,12 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			end
 		end
 
-		if x == y then -- If same status, then return alphabetical order
-			return a["name"] < b["name"]
+		if x == y then -- Same status
+			if a["role"] == "Standby" then -- In Stand By return in order of signups
+				return a["timestamp"] < b["timestamp"]
+			else -- Return alphabetical order
+				return a["name"] < b["name"]
+			end
 		else
 			return x > y -- Status order (with Green statuses on top of the list)
 		end
