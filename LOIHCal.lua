@@ -385,7 +385,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					7 NotSignedup
 					8 Tentative
 			]]
-			if (mvPlayerTable["status"] == Enum.CalendarStatus.Available or mvPlayerTable["status"] == Enum.CalendarStatus.Confirmed or mvPlayerTable["status"] == Enum.CalendarStatus.Signedup) then -- Check if we are Signed Up or Confirmed before continueing
+			if (movePlayerTable["status"] == Enum.CalendarStatus.Available or movePlayerTable["status"] == Enum.CalendarStatus.Confirmed or movePlayerTable["status"] == Enum.CalendarStatus.Signedup) then -- Check if we are Signed Up or Confirmed before continueing
 				table.remove(ns.role[movePlayerTable["role"]], roleTblIndex) -- Remove from old Role-table
 				movePlayerTable["role"] = "Standby" -- Change Role in the Player-table
 				table.insert(ns.role["Standby"], movePlayerTable) -- Insert into Stand By Role-table
