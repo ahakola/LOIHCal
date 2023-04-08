@@ -244,7 +244,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 	local function _eventTimestampSort(a, b)
 		--[[	Sort asceding by signup timestamps. 						]]--
-		if a.timestamp and b.timestamp then
+		if a.status == Enum.CalendarStatus.Confirmed and b.status ~= Enum.CalendarStatus.Confirmed then -- Give confirmed people priority over others
+			return true
+		elseif a.status ~= Enum.CalendarStatus.Confirmed and b.status == Enum.CalendarStatus.Confirmed then -- Give confirmed people priority over others
+			return false
+		elseif a.timestamp and b.timestamp then -- Priority based on signup time
 			return a.timestamp < b.timestamp
 		else -- Failsafe
 			return a.name < b.name
