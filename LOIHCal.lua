@@ -459,7 +459,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 			-- Count signups (Accepted, Confirmed and Signed Ups)
 			if ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Available or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Confirmed or ns.openEvent["Players"][k]["status"] == Enum.CalendarStatus.Signedup then
-				if ns.openEvent["Players"][k]["role"] ~= "Signup" then
+				if ns.openEvent["Players"][k]["role"] ~= "Signup" and ns.openEvent["Players"][k]["role"] ~= "Standby" then
 					_updateRole(ns.openEvent["Players"][k]["name"], ns.openEvent["Players"][k]["role"], ns.openEvent["Players"][k]["class"], ns.openEvent.timetable)
 				end
 				ns.numSignup = ns.numSignup + 1
