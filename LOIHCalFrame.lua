@@ -427,6 +427,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 	UIFrame.Container.Signup.desc:SetPoint("TOP", UIFrame.Container.Signup, "BOTTOM", 0, -5)
 	UIFrame.Container.Signup.desc.s:SetPoint("TOP")
 	UIFrame.Container.Signup.desc.s:SetFormattedText(L.SignupDesc, HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE, HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE, RED_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE..HIGHLIGHT_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE..RED_FONT_COLOR_CODE, FONT_COLOR_CODE_CLOSE)
+	UIFrame.Container.Signup.desc.s:SetTextScale(UIParent:GetEffectiveScale()) -- Scale text size down with UIParent scale
 
 	--  Standby frame  ---------------------------------------------------------
 	UIFrame.Container.Standby = _frameFactory("Frame", "Standby", UIFrame.Container, 152, 92, BackdropTemplateMixin and "BackdropTemplate")
