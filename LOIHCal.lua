@@ -66,6 +66,7 @@ ns.DBdefaults = {
 		autoRoleCount = 3,
 		autoRoleDecay = true,
 		autoRoleDecayTime = 2, -- Months
+		autoStandBy = false,
 		defaultDifficulty = ns.difficulties[1].id,
 		sendWhisper = true,
 		InvWhisper = L.DefaultInvWhisper,
@@ -438,7 +439,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 						found = true
 
 						limitCount = limitCount + 1 -- Count when we go over the upper limit
-						if limitCount > upperLimitCount then
+						if db.config.autoStandBy and limitCount > upperLimitCount then
 							_moveToStandBy(ns.openEvent["Players"][k], i) -- Set people past upper limit to stand by based on sign up time
 						end
 
@@ -456,7 +457,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				end
 
 				limitCount = limitCount + 1 -- Count when we go over the upper limit
-				if limitCount > upperLimitCount then
+				if db.config.autoStandBy and limitCount > upperLimitCount then
 					_moveToStandBy(ns.openEvent["Players"][k], #ns.role[ns.openEvent["Players"][k]["role"]]) -- Set people past upper limit to stand by based on sign up time
 				end
 			end
@@ -2275,7 +2276,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		local Automation = CreatePanel("$parentAutomation", L.AutomationSettingsTitle)
 		Automation:SetPoint("TOP", General, "BOTTOM", 0, -28)
 
-		local autorole, autodecay, autoconfirm
+		local autorole, autodecay, autoconfirm, autostandby
 
 		autorole = MakeCheckBox(L.AutoRoles, L.AutoRoles, L.AutoRolesDesc)
 		autorole:SetPoint("TOPLEFT", Automation, "TOPLEFT", 10, -10)
@@ -2316,6 +2317,17 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			--PlaySound(checked and "igMainMenuOptionCheckBoxOn" or "igMainmenuOptionCheckBoxOff")
 			PlaySound(checked and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF)
 			db.config.autoConfirm = checked
+		end)
+
+		autostandby = MakeCheckBox(L.AutoStandBy, L.AutoStandBy, L.AutoStandByDesc)
+		autostandby:SetPoint("TOPLEFT", autodecay, "BOTTOMLEFT", 0, -10)
+		autostandby:SetScript("OnClick", function(this)
+			Debug("+autostandby \"%s\"", tostring(this:GetChecked()))
+
+			local checked = not not this:GetChecked()
+			--PlaySound(checked and "igMainMenuOptionCheckBoxOn" or "igMainmenuOptionCheckBoxOff")
+			PlaySound(checked and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON or SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_OFF)
+			db.config.autoStandBy = checked
 		end)
 
 		Automation:SetHeight(floor(autoconfirm:GetHeight() + autorole:GetHeight() + 29 + 0.5))

@@ -79,6 +79,8 @@ L.AutoRoleDecay = "Auto-Roles decay"
 L.AutoRoleDecayDesc = "Automaticly remove players from Roles-list if they haven't signed up for %i months or more."
 L.AutoConfirm = "Auto-Confirm"
 L.AutoConfirmDesc = "Automaticly Confirm players with role. Confirmed players cannot change their sign up status later while accepted players can."
+L.AutoStandBy = "Auto-Stand By"
+L.AutoStandByDesc = "Automaticly move signed up players to Stand By when the selected raid size has been filled."
 
 L.DefaultSettingsTitle = "Default settings for new raid events"
 
