@@ -213,7 +213,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 
 	--  Faux Scroller / ScrollBar Factory  -------------------------------------
 	local function _scrollBarFactory(parent, tbl)
-		local f = CreateFrame("ScrollFrame", "$parentScrollBar", parent, "FauxScrollFrameTemplate")
+		local f = CreateFrame("ScrollFrame", "$parentScrollBar", parent, "ScrollFrameTemplate")
 		f:SetPoint("TOPLEFT", -7, -1)
 		f:SetPoint("BOTTOMRIGHT", -23, 1)
 

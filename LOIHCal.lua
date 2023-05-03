@@ -23,7 +23,7 @@ local isWrathClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC)
 ns.difficulties, ns.role, ns.functions = {}, {}, {}, {}
 ns.openEvent, ns.inviteTable = {}, {}
 ns.numSignup, ns.notReplied, ns.selected, ns.selectedPlayer = 0, 0, false, false
-ns.version = GetAddOnMetadata(ADDON_NAME, "Version")
+ns.version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version")
 
 --[[----------------------------------------------------------------------------
 	Pre-WoD:
@@ -2197,11 +2197,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		SubText:SetPoint("TOPLEFT", Title, "BOTTOMLEFT", 0, -8)
 		SubText:SetJustifyH("LEFT")
 		SubText:SetJustifyV("TOP")
-		SubText:SetText(GetAddOnMetadata(ADDON_NAME, "Notes"))
+		SubText:SetText(C_AddOns.GetAddOnMetadata(ADDON_NAME, "Notes"))
 
 		--  Scroller  ----------------------------------------------------------
 
-		local Scroller = CreateFrame("ScrollFrame", "$parentScoller", Options, "UIPanelScrollFrameTemplate")
+		local Scroller = CreateFrame("ScrollFrame", "$parentScoller", Options, "ScrollFrameTemplate")
 		Scroller:SetWidth(floor(optionsCanvas:GetWidth()) - 40)
 		Scroller:SetHeight(floor(optionsCanvas:GetHeight() - 16 - Title:GetHeight() - 8 - SubText:GetHeight() - 15))
 		Scroller:SetPoint("BOTTOM", optionsCanvas, "BOTTOM", -5, 0)
