@@ -1226,8 +1226,15 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			end
 		end
 
-		FauxScrollFrame_Update(self.scrollBar, maxValue, slots, 15) -- Scrollbar, max items on scrollbar, max visible items on scrollbar and height of item on scrollbar
-		local offset = FauxScrollFrame_GetOffset(self.scrollBar)
+		-- 10.1 Replacing FauxScroller with ScrollFrame
+		--FauxScrollFrame_Update(self.scrollBar, maxValue, slots, 15) -- Scrollbar, max items on scrollbar, max visible items on scrollbar and height of item on scrollbar
+		local offset = FauxScrollFrame_GetOffset(self.scrollBar) or 0
+		local sB = self.scrollBar.ScrollBar
+		local sC = self.scrollBar.scrollChild --_G[self:GetName() .. "ScrollChild"]
+		sC:SetSize(floor(self:GetWidth() + .5) - 2, maxValue * 15) -- 150 x rows * 15
+		sB:SetHideIfUnscrollable(true)
+		--Print(self:GetName(), "Offset:", offset, "Width:", sC:GetWidth())
+
 		for i = 1, slots do
 			local value = i + offset
 			if value <= maxValue then
@@ -1451,8 +1458,15 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		local maxValue = #scrollTemp
 		local slots = 20
 
-		FauxScrollFrame_Update(self.scrollBar, maxValue, slots, 15) -- Scrollbar, max items on scrollbar, max visible items on scrollbar and height of item on scrollbar
-		local offset = FauxScrollFrame_GetOffset(self.scrollBar)
+		-- 10.1
+		--FauxScrollFrame_Update(self.scrollBar, maxValue, slots, 15) -- Scrollbar, max items on scrollbar, max visible items on scrollbar and height of item on scrollbar
+		local offset = FauxScrollFrame_GetOffset(self.scrollBar) or 0
+		local sB = self.scrollBar.ScrollBar
+		local sC = self.scrollBar.scrollChild --_G[self:GetName() .. "ScrollChild"]
+		sC:SetSize(floor(self:GetWidth() + .5) - 2, maxValue * 15) -- 258 x rows * 15
+		sB:SetHideIfUnscrollable(true)
+		--Print(self:GetName(), "Offset:", offset, "Width:", sC:GetWidth())
+
 		for i = 1, slots do
 			local value = i + offset
 			if value <= maxValue then

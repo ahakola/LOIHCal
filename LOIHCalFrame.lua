@@ -239,6 +239,11 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			end)
 		end
 
+		-- 10.1 Replacing FauxScroller with ScrollFrame
+		local scrollChild = CreateFrame("Frame") --, parent:GetName().."ScrollChild")
+		f:SetScrollChild(scrollChild)
+		f.scrollChild = scrollChild
+
 		return f
 	end
 
