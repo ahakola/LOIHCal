@@ -921,8 +921,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					if db.config.sendWhisper then
 						SendChatMessage(ns.whisperLine, "WHISPER", nil, ns.inviteTable[1]) -- 1. Whisper
 					end
-					--InviteUnit(ns.inviteTable[1]) -- 2. Invite
-					C_PartyInfo.InviteUnit(ns.inviteTable[1]) -- 2. Invite
+					if isWrathClassic then -- Fixes CurseForge issue #13
+						InviteUnit(ns.inviteTable[1]) -- 2. Invite
+					else
+						C_PartyInfo.InviteUnit(ns.inviteTable[1]) -- 2. Invite
+					end
 					local lastInvited = table.remove(ns.inviteTable, 1) -- 3. Remove from queue
 
 					invited = invited + 1
