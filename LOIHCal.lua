@@ -1818,7 +1818,11 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		--self:RegisterEvent("QUEST_LOG_UPDATE")
 		self:RegisterEvent("GROUP_ROSTER_UPDATE")
 
-		ns.Elv = C_AddOns.IsAddOnLoaded("ElvUI")
+		if isWrathClassic then
+			ns.Elv = IsAddOnLoaded("ElvUI")
+		else
+			ns.Elv = C_AddOns.IsAddOnLoaded("ElvUI")
+		end
 		ns.playerName = UnitName("player")
 		ns.skinned = false
 		ns.massInviteNeedRaidSetup = false
