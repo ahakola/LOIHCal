@@ -19,6 +19,7 @@ local ERR_INVITE_PLAYER_S = string.gsub(_G.ERR_INVITE_PLAYER_S, "%%s", "(.+)")
 --local ERR_INVITE_PLAYER_S = string.gsub(_G.ERR_CHAT_PLAYER_NOT_FOUND_S, "%%s", "(.+)") -- Debug
 
 local isWrathClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC)
+local isCataClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC)
 
 ns.difficulties, ns.role, ns.functions = {}, {}, {}, {}
 ns.openEvent, ns.inviteTable = {}, {}
@@ -40,7 +41,7 @@ ns.version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version")
 	24	"Timewalking"		25	"PvP Scenario"			26	nil
 ----------------------------------------------------------------------------]]--
 local difficultyOffset = 0
-if isWrathClassic then -- WratchClassic (10N, 10HC, 25N and 25HC)
+if (isWrathClassic or isCataClassic) then -- WratchClassic (10N, 10HC, 25N and 25HC)
 	for i = 3, 6 do
 		table.insert(ns.difficulties, {name = GetDifficultyInfo(i), id = i})
 	end
@@ -321,7 +322,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 			local signupsString = L.Signups
 			local enoughSignups, tooMuchSignups = false, false
-			if isWrathClassic then -- Classic
+			if (isWrathClassic or isWrathClassic) then -- Classic
 				local signupLimit = (ns.openEvent.difficulty == 3 or ns.openEvent.difficulty == 4) and 10 or 25 -- 10man or 25man
 				if ns.numSignup >= signupLimit then
 					enoughSignups = true
@@ -412,7 +413,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		local limitCount = 0
 		local upperLimitCount = 30
-		if isWrathClassic then -- Classic
+		if (isWrathClassic or isCataClassic) then -- Classic
 			upperLimitCount = (ns.openEvent.difficulty == 3 or ns.openEvent.difficulty == 4) and 10 or 25 -- 10man or 25man
 		else -- Retail
 			upperLimitCount = (ns.openEvent.difficulty == 16) and 20 or 30 -- 20man Fixed or 10-30man Flex

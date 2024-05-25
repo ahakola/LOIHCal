@@ -7,8 +7,9 @@ local ADDON_NAME, ns = ...
 local L = ns.L
 
 local isWrathClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC)
+local isCataClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC)
 local difficultyOffset = 0
-if isWrathClassic then -- WrathClassic
+if (isWrathClassic or isCataClassic) then -- WrathClassic
 	difficultyOffset = 2 -- List items 1-4, Difficulty items 3-6
 else -- Retail
 	difficultyOffset = 13 -- List items 1-3, Difficulty items 14-16
@@ -136,21 +137,21 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			t:SetTexCoord(0.25, 0.5, 0, 1)
 		elseif role == "SIGNUP" then
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			if isWrathClassic then
+			if (isWrathClassic or isCataClassic) then
 				t:SetTexCoord(4/8, 5/8, 1/2, 1)
 			else -- Retail
 				t:SetTexCoord(0.5, 0.625, 0.125, 0.25)
 			end
 		elseif role == "STANDBY" then
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			if isWrathClassic then
+			if (isWrathClassic or isCataClassic) then
 				t:SetTexCoord(1/8, 2/8, 1/2, 1)
 			else -- Retail
 				t:SetTexCoord(0.625, 0.75, 0.5, 0.625)
 			end
 		elseif role == "DIFFICULTY" then
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			if isWrathClassic then
+			if (isWrathClassic or isCataClassic) then
 				t:SetTexCoord(6/8, 7/8, 0, 1/2)
 			else -- Retail
 				--t:SetTexCoord(0.625, 0.75, 0.375, 0.5)
