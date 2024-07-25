@@ -2142,11 +2142,16 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 -------------------------------------------------------------------------------
 --  Config
 -------------------------------------------------------------------------------
+	--[[
 	Options = CreateFrame("Frame", "LOIHCalOptions", InterfaceOptionsFramePanelContainer)
 	Options:Hide()
 	Options.name = ADDON_NAME
 	Options.scrolling = true
 	InterfaceOptions_AddCategory(Options)
+	]]--
+	Options = CreateFrame("Frame", "LOIHCalOptions")
+	local category = Settings.RegisterCanvasLayoutCategory(Options, ADDON_NAME)
+	Settings.RegisterAddOnCategory(category)
 
 	Options:SetScript("OnShow", function()
 		local ScrollChild
