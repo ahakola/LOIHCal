@@ -24,7 +24,7 @@ UIFrame:SetToplevel(true)
 UIFrame:EnableMouse(true)
 
 local TabsFrame
-if isWrathClassic then
+if (isWrathClassic or isCataClassic) then
 	TabsFrame = CreateFrame("Frame", "LOIHCalTabsFrame", UIParent)
 else -- 10.0 DF
 	TabsFrame = CreateFrame("Frame", "LOIHCalTabsFrame", UIParent, "TabSystemTemplate")
@@ -250,7 +250,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 
 	--  Tab Factory  -----------------------------------------------------------
 	local function _tabFactory(parent, number, text)
-		if isWrathClassic then
+		if (isWrathClassic or isCataClassic) then
 			local f = CreateFrame("Button", "$parentTab"..number, parent, "CharacterFrameTabButtonTemplate")
 			f:SetID(number)
 			f:SetText(text)
