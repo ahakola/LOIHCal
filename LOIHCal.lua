@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 	LOIHCal
 
-	2014-2024
+	2014-2025
 	Sanex @ EU-Arathor / ahak @ Curseforge
 
 	http://wow.curseforge.com/addons/loihcal/
