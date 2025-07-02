@@ -8,8 +8,10 @@ local L = ns.L
 
 local isWrathClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC)
 local isCataClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC)
+local isMoPClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_MISTS_CLASSIC)
+local isAnyClassic = (isWrathClassic or isCataClassic or isMoPClassic)
 local difficultyOffset = 0
-if (isWrathClassic or isCataClassic) then -- WrathClassic
+if isAnyClassic then -- WrathClassic
 	difficultyOffset = 2 -- List items 1-4, Difficulty items 3-6
 else -- Retail
 	difficultyOffset = 13 -- List items 1-3, Difficulty items 14-16
@@ -24,7 +26,7 @@ UIFrame:SetToplevel(true)
 UIFrame:EnableMouse(true)
 
 local TabsFrame
-if (isWrathClassic or isCataClassic) then
+if isAnyClassic then
 	TabsFrame = CreateFrame("Frame", "LOIHCalTabsFrame", UIParent)
 else -- 10.0 DF
 	TabsFrame = CreateFrame("Frame", "LOIHCalTabsFrame", UIParent, "TabSystemTemplate")
@@ -136,27 +138,36 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 			t:SetTexture("Interface\\LFGFrame\\LFGRole")
 			t:SetTexCoord(0.25, 0.5, 0, 1)
 		elseif role == "SIGNUP" then
+			t:SetAtlas("QuestRepeatableTurnin")
+			--[[
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			if (isWrathClassic or isCataClassic) then
+			if isAnyClassic then
 				t:SetTexCoord(4/8, 5/8, 1/2, 1)
 			else -- Retail
 				t:SetTexCoord(0.5, 0.625, 0.125, 0.25)
 			end
+			]]
 		elseif role == "STANDBY" then
+			t:SetAtlas("QuestLegendary")
+			--[[
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			if (isWrathClassic or isCataClassic) then
+			if isAnyClassic then
 				t:SetTexCoord(1/8, 2/8, 1/2, 1)
 			else -- Retail
 				t:SetTexCoord(0.625, 0.75, 0.5, 0.625)
 			end
+			]]
 		elseif role == "DIFFICULTY" then
+			t:SetAtlas("DungeonSkull")
+			--[[
 			t:SetTexture("Interface\\Minimap\\ObjectIcons")
-			if (isWrathClassic or isCataClassic) then
+			if isAnyClassic then
 				t:SetTexCoord(6/8, 7/8, 0, 1/2)
 			else -- Retail
 				--t:SetTexCoord(0.625, 0.75, 0.375, 0.5)
 				t:SetTexCoord(7/8, 1, 3/4, 7/8)
 			end
+			]]
 		elseif role == "INVITE" then
 			t:SetTexture("Interface\\Buttons\\UI-GuildButton-MOTD-Up")
 			t:SetTexCoord(0, 1, 0, 1)
@@ -250,7 +261,7 @@ TabsFrame:SetPoint("TOP", UIFrame, "BOTTOM")
 
 	--  Tab Factory  -----------------------------------------------------------
 	local function _tabFactory(parent, number, text)
-		if (isWrathClassic or isCataClassic) then
+		if isAnyClassic then
 			local f = CreateFrame("Button", "$parentTab"..number, parent, "CharacterFrameTabButtonTemplate")
 			f:SetID(number)
 			f:SetText(text)

@@ -20,6 +20,8 @@ local ERR_INVITE_PLAYER_S = string.gsub(_G.ERR_INVITE_PLAYER_S, "%%s", "(.+)")
 
 local isWrathClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC)
 local isCataClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC)
+local isMoPClassic = (_G.WOW_PROJECT_ID == _G.WOW_PROJECT_MISTS_CLASSIC)
+local isAnyClassic = (isWrathClassic or isCataClassic or isMoPClassic)
 
 ns.difficulties, ns.role, ns.functions = {}, {}, {}, {}
 ns.openEvent, ns.inviteTable = {}, {}
@@ -41,7 +43,7 @@ ns.version = C_AddOns.GetAddOnMetadata(ADDON_NAME, "Version")
 	24	"Timewalking"		25	"PvP Scenario"			26	nil
 ----------------------------------------------------------------------------]]--
 local difficultyOffset = 0
-if (isWrathClassic or isCataClassic) then -- WratchClassic (10N, 10HC, 25N and 25HC)
+if isAnyClassic then -- WratchClassic (10N, 10HC, 25N and 25HC)
 	for i = 3, 6 do
 		table.insert(ns.difficulties, {name = GetDifficultyInfo(i), id = i})
 	end
@@ -413,7 +415,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		local limitCount = 0
 		local upperLimitCount = 30
-		if (isWrathClassic or isCataClassic) then -- Classic
+		if isAnyClassic then -- Classic
 			upperLimitCount = (ns.openEvent.difficulty == 3 or ns.openEvent.difficulty == 4) and 10 or 25 -- 10man or 25man
 		else -- Retail
 			upperLimitCount = (ns.openEvent.difficulty == 16) and 20 or 30 -- 20man Fixed or 10-30man Flex
@@ -1614,7 +1616,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 
 		local id
 	
-		if (isWrathClassic or isCataClassic) then
+		if isAnyClassic then
 			id = self:GetID()
 			PanelTemplates_SetTab(TabsFrame, id)
 		else -- 10.0 DF
@@ -1639,7 +1641,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					if ns.Elv then
 						TabsFrame:SetPoint("TOP", CalendarViewEventFrame, "BOTTOM")
 					else
-						if (isWrathClassic or isCataClassic) then
+						if isAnyClassic then
 							TabsFrame:SetPoint("TOP", CalendarViewEventFrame, "BOTTOM", 0, 4)
 						else -- 10.0 DF
 							TabsFrame:SetPoint("TOP", CalendarViewEventFrame, "BOTTOM", 0, 6)
@@ -1649,7 +1651,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 					if ns.Elv then
 						TabsFrame:SetPoint("TOP", CalendarCreateEventFrame, "BOTTOM")
 					else
-						if (isWrathClassic or isCataClassic) then
+						if isAnyClassic then
 							TabsFrame:SetPoint("TOP", CalendarCreateEventFrame, "BOTTOM", 0, 4)
 						else -- 10.0 DF
 							TabsFrame:SetPoint("TOP", CalendarCreateEventFrame, "BOTTOM", 0, 6)
@@ -1729,7 +1731,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 	-- Rename tabs and Show/Hide 3rd tab
 	function ns.functions.renameTabs()
 		if db.config.overlay then
-			if (isWrathClassic or isCataClassic) then
+			if isAnyClassic then
 				TabsFrame.tab3:Show()
 				TabsFrame.tab1:SetText(L.Default)
 				TabsFrame.tab2:SetText(ADDON_NAME)
@@ -1748,7 +1750,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				TabsFrame:SetTabShown(3, true)
 			end
 		else
-			if (isWrathClassic or isCataClassic) then
+			if isAnyClassic then
 				TabsFrame.tab3:Hide()
 				TabsFrame.tab1:SetText(ADDON_NAME)
 				TabsFrame.tab2:SetText(L.Roles)
@@ -1910,7 +1912,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				if db.config.defaultView then
 					CalendarViewEventFrame:SetAlpha(0)
 
-					if (isWrathClassic or isCataClassic) then
+					if isAnyClassic then
 						PanelTemplates_SetTab(TabsFrame, 2)
 					else -- 10.0 DF
 						TabsFrame:SetTab(2)
@@ -1920,7 +1922,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				else
 					CalendarViewEventFrame:SetAlpha(1)
 
-					if (isWrathClassic or isCataClassic) then
+					if isAnyClassic then
 						PanelTemplates_SetTab(TabsFrame, 1)
 					else -- 10.0 DF
 						TabsFrame:SetTab(1)
@@ -1937,7 +1939,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				CalendarViewEventFrame:SetAlpha(1)
 
 				UIFrame:SetPoint("TOPLEFT", CalendarViewEventFrame, "TOPRIGHT", 26, 0)
-				if (isWrathClassic or isCataClassic) then
+				if isAnyClassic then
 					PanelTemplates_SetTab(TabsFrame, 1)
 				else -- 10.0 DF
 					TabsFrame:SetTab(1)
@@ -1962,7 +1964,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				if db.config.defaultView then
 					CalendarCreateEventFrame:SetAlpha(0)
 
-					if (isWrathClassic or isCataClassic) then
+					if isAnyClassic then
 						PanelTemplates_SetTab(TabsFrame, 2)
 					else -- 10.0 DF
 						TabsFrame:SetTab(2)
@@ -1972,7 +1974,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				else
 					CalendarCreateEventFrame:SetAlpha(1)
 
-					if (isWrathClassic or isCataClassic) then
+					if isAnyClassic then
 						PanelTemplates_SetTab(TabsFrame, 1)
 					else -- 10.0 DF
 						TabsFrame:SetTab(1)
@@ -1989,7 +1991,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 				CalendarCreateEventFrame:SetAlpha(1)
 
 				UIFrame:SetPoint("TOPLEFT", CalendarCreateEventFrame, "TOPRIGHT", 26, 0)
-				if (isWrathClassic or isCataClassic) then
+				if isAnyClassic then
 					PanelTemplates_SetTab(TabsFrame, 1)
 				else -- 10.0 DF
 					TabsFrame:SetTab(1)
