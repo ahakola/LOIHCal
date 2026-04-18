@@ -2199,13 +2199,7 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 			return checkbox
 		end
 
-		--  10.0 Hacks  --------------------------------------------------------
-		local optionsCanvas
-		if isWrathClassic then
-			optionsCanvas = InterfaceOptionsFramePanelContainer
-		else
-			optionsCanvas = SettingsPanel.Container.SettingsCanvas
-		end
+		local optionsCanvas = SettingsPanel.Container.SettingsCanvas
 
 		--  Title  -------------------------------------------------------------
 
