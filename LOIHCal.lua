@@ -2144,13 +2144,6 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 -------------------------------------------------------------------------------
 --  Config
 -------------------------------------------------------------------------------
-	--[[
-	Options = CreateFrame("Frame", "LOIHCalOptions", InterfaceOptionsFramePanelContainer)
-	Options:Hide()
-	Options.name = ADDON_NAME
-	Options.scrolling = true
-	InterfaceOptions_AddCategory(Options)
-	]]--
 	Options = CreateFrame("Frame", "LOIHCalOptions")
 	local category = Settings.RegisterCanvasLayoutCategory(Options, ADDON_NAME)
 	Settings.RegisterAddOnCategory(category)
@@ -2198,8 +2191,6 @@ CALENDAR_INVITESTATUS_TENTATIVE		= 9;
 		end
 
 		local function MakeCheckBox(name, tooltipText, tooltipRequirement)
-			--local checkbox = CreateFrame("CheckButton", name, ScrollChild, "InterfaceOptionsCheckButtonTemplate")
-			--_G[checkbox:GetName().."Text"]:SetText(name)
 			local checkbox = CreateFrame("CheckButton", nil, ScrollChild, "InterfaceOptionsCheckButtonTemplate")
 			checkbox.Text:SetText(name)
 			checkbox.tooltipText = tooltipText
